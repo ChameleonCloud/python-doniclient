@@ -11,10 +11,10 @@ log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 filterwarnings = ["ignore::DeprecationWarning"]
 
 [tool.isort]
-known_first_party = "python-doniclient"
+known_first_party = "doniclient"
 
 [tool.poetry]
-name = "python-doniclient"
+name = "doniclient"
 version = "0.1.0"
 description = ""
 authors = ["Michael Sherman <shermanm@uchicago.edu>"]
@@ -36,3 +36,14 @@ pydocstyle = "^6.0.0"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.plugins."openstack.cli.extension"]
+hardware = "doniclient.client"
+
+[tool.poetry.plugins."openstack.hardware.v1"]
+hardware_export = "doniclient.hardware::ExportResources"
+hardware_list = "doniclient.hardware::ListResources"
+hardware_get = "doniclient.hardware::GetResource"
+hardware_enroll = "doniclient.hardware::EnrollResource"
+hardware_update = "doniclient.hardware::UpdateResource"
+hardware_sync = "doniclient.hardware::SyncResource"
