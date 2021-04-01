@@ -20,8 +20,9 @@ description = ""
 authors = ["Michael Sherman <shermanm@uchicago.edu>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.6"
 osc-lib = "^2.3.1"
+python-openstackclient = {version = "^5.5.0", extras = ["cli"]}
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2"
@@ -41,9 +42,9 @@ build-backend = "poetry.core.masonry.api"
 hardware = "doniclient.client"
 
 [tool.poetry.plugins."openstack.hardware.v1"]
-hardware_export = "doniclient.hardware::ExportResources"
-hardware_list = "doniclient.hardware::ListResources"
-hardware_get = "doniclient.hardware::GetResource"
-hardware_enroll = "doniclient.hardware::EnrollResource"
-hardware_update = "doniclient.hardware::UpdateResource"
-hardware_sync = "doniclient.hardware::SyncResource"
+hardware_export = "doniclient.hardware:ExportResources"
+hardware_list = "doniclient.hardware:ListResources"
+hardware_get = "doniclient.hardware:GetResource"
+hardware_enroll = "doniclient.hardware:EnrollResource"
+hardware_update = "doniclient.hardware:UpdateResource"
+hardware_sync = "doniclient.hardware:SyncResource"
