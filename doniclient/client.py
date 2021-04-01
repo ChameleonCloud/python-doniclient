@@ -4,15 +4,15 @@ from osc_lib import utils
 DEFAULT_API_VERSION = "1"
 
 # Required by the OSC plugin interface
-API_NAME = "oscplugin"
-API_VERSION_OPTION = "os_oscplugin_api_version"
+API_NAME = "hardware"
+API_VERSION_OPTION = "os_hardware_api_version"
 API_VERSIONS = {
-    "1": "oscplugin.v1.client.Client",
+    "1": "hardware.v1.client.Client",
 }
 
 # Required by the OSC plugin interface
 def make_client(instance):
-    """Returns a client to the ClientManager
+    """Returns a client to the ClientManager.
 
     Called to instantiate the requested client version.  instance has
     any available auth info that may be required to prepare the client.
@@ -29,7 +29,7 @@ def make_client(instance):
 
 # Required by the OSC plugin interface
 def build_option_parser(parser):
-    """Hook to add global options
+    """Hook to add global options.
 
     Called from openstackclient.shell.OpenStackShell.__init__()
     after the builtin parser has been initialized.  This is
