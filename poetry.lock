@@ -7,6 +7,14 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "argparse"
+version = "1.4.0"
+description = "Python command-line parsing library"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "atomicwrites"
 version = "1.4.0"
 description = "Atomic file writes."
@@ -200,6 +208,31 @@ decorator = ">=4.0.0"
 stevedore = ">=3.0.0"
 
 [[package]]
+name = "extras"
+version = "1.0.0"
+description = "Useful extra bits for Python - things that shold be in the standard library"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
+name = "fixtures"
+version = "3.0.0"
+description = "Fixtures, reusable state for writing clean tests and more."
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+pbr = ">=0.11"
+six = "*"
+testtools = ">=0.9.22"
+
+[package.extras]
+docs = ["docutils"]
+test = ["mock"]
+
+[[package]]
 name = "flake8"
 version = "3.9.0"
 description = "the modular source code checker: pep8 pyflakes and co"
@@ -345,6 +378,14 @@ kerberos = ["requests-kerberos (>=0.8.0)"]
 oauth1 = ["oauthlib (>=0.6.2)"]
 saml2 = ["lxml (>=4.2.0)"]
 test = ["PyYAML (>=3.12)", "bandit (>=1.1.0,<1.6.0)", "betamax (>=0.7.0)", "coverage (>=4.0,!=4.4)", "fixtures (>=3.0.0)", "flake8-docstrings (==0.2.1.post1)", "flake8-import-order (>=0.17.1)", "hacking (>=3.0.1,<3.1.0)", "lxml (>=4.2.0)", "oauthlib (>=0.6.2)", "oslo.config (>=5.2.0)", "oslo.utils (>=3.33.0)", "oslotest (>=3.2.0)", "pycodestyle (>=2.0.0,<2.6.0)", "reno (>=3.1.0)", "requests-kerberos (>=0.8.0)", "requests-mock (>=1.2.0)", "stestr (>=1.0.0)", "testresources (>=2.0.0)", "testtools (>=2.2.0)"]
+
+[[package]]
+name = "linecache2"
+version = "1.0.0"
+description = "Backports of the linecache module"
+category = "dev"
+optional = false
+python-versions = "*"
 
 [[package]]
 name = "mccabe"
@@ -524,6 +565,20 @@ packaging = ">=20.4"
 pbr = ">=2.0.0,<2.1.0 || >2.1.0"
 pyparsing = ">=2.1.0"
 pytz = ">=2013.6"
+
+[[package]]
+name = "oslotest"
+version = "4.4.1"
+description = "Oslo test framework"
+category = "dev"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+fixtures = ">=3.0.0"
+python-subunit = ">=1.0.0"
+six = ">=1.10.0"
+testtools = ">=2.2.0"
 
 [[package]]
 name = "packaging"
@@ -745,6 +800,14 @@ six = ">=1.10.0"
 stevedore = ">=1.20.0"
 
 [[package]]
+name = "python-mimeparse"
+version = "1.6.0"
+description = "A module provides basic functions for parsing mime-type names and matching them against a list of media-ranges."
+category = "dev"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "python-novaclient"
 version = "17.4.0"
 description = "Client library for OpenStack Compute API"
@@ -782,6 +845,22 @@ python-cinderclient = ">=3.3.0"
 python-keystoneclient = ">=3.22.0"
 python-novaclient = ">=17.0.0"
 stevedore = ">=2.0.1"
+
+[[package]]
+name = "python-subunit"
+version = "1.4.0"
+description = "Python implementation of subunit test streaming protocol"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+extras = "*"
+testtools = ">=0.9.34"
+
+[package.extras]
+docs = ["docutils"]
+test = ["fixtures", "testscenarios", "hypothesis"]
 
 [[package]]
 name = "pytz"
@@ -881,12 +960,43 @@ importlib-metadata = {version = ">=1.7.0", markers = "python_version < \"3.8\""}
 pbr = ">=2.0.0,<2.1.0 || >2.1.0"
 
 [[package]]
+name = "testtools"
+version = "2.4.0"
+description = "Extensions to the Python standard library unit testing framework"
+category = "dev"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+
+[package.dependencies]
+extras = ">=1.0.0"
+fixtures = ">=1.3.0"
+pbr = ">=0.11"
+python-mimeparse = "*"
+six = ">=1.4.0"
+traceback2 = "*"
+unittest2 = ">=1.0.0"
+
+[package.extras]
+test = ["testresources", "testscenarios", "unittest2 (>=1.1.0)"]
+
+[[package]]
 name = "toml"
 version = "0.10.2"
 description = "Python Library for Tom's Obvious, Minimal Language"
 category = "dev"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
+
+[[package]]
+name = "traceback2"
+version = "1.4.0"
+description = "Backports of the traceback module"
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+linecache2 = "*"
 
 [[package]]
 name = "typed-ast"
@@ -903,6 +1013,19 @@ description = "Backported and Experimental Type Hints for Python 3.5+"
 category = "main"
 optional = false
 python-versions = "*"
+
+[[package]]
+name = "unittest2"
+version = "1.1.0"
+description = "The new features in unittest backported to Python 2.4+."
+category = "dev"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+argparse = "*"
+six = ">=1.4"
+traceback2 = "*"
 
 [[package]]
 name = "urllib3"
@@ -959,12 +1082,16 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "1ab24bb61dcd62f5b7d164fa0b1d9718d8094945082e7ee746fbcf9557f9b05e"
+content-hash = "ec29855d6412b357eb5591ad94cbc445de9193877f8580ada8e0f748243542e2"
 
 [metadata.files]
 appdirs = [
     {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
     {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
+]
+argparse = [
+    {file = "argparse-1.4.0-py2.py3-none-any.whl", hash = "sha256:c31647edb69fd3d465a847ea3157d37bed1f95f19760b11a47aa91c04b666314"},
+    {file = "argparse-1.4.0.tar.gz", hash = "sha256:62b089a55be1d8949cd2bc7e0df0bddb9e028faefc8c32038cc84862aefdd6e4"},
 ]
 atomicwrites = [
     {file = "atomicwrites-1.4.0-py2.py3-none-any.whl", hash = "sha256:6d1784dea7c0c8d4a5172b6c620f40b6e4cbfdf96d783691f2e1302a7b88e197"},
@@ -1073,6 +1200,14 @@ docopt = [
     {file = "dogpile.cache-1.1.2-py3-none-any.whl", hash = "sha256:b13740e8100ed459928ac50d5ba9a4512934adecd6c0b9af93978789184076f4"},
     {file = "dogpile.cache-1.1.2.tar.gz", hash = "sha256:2134464672a3deb7ef1366a8691726686d8c62540e4208f1a40c9aaa1a0b6a45"},
 ]
+extras = [
+    {file = "extras-1.0.0-py2.py3-none-any.whl", hash = "sha256:f689f08df47e2decf76aa6208c081306e7bd472630eb1ec8a875c67de2366e87"},
+    {file = "extras-1.0.0.tar.gz", hash = "sha256:132e36de10b9c91d5d4cc620160a476e0468a88f16c9431817a6729611a81b4e"},
+]
+fixtures = [
+    {file = "fixtures-3.0.0-py2.py3-none-any.whl", hash = "sha256:2a551b0421101de112d9497fb5f6fd25e5019391c0fbec9bad591ecae981420d"},
+    {file = "fixtures-3.0.0.tar.gz", hash = "sha256:fcf0d60234f1544da717a9738325812de1f42c2fa085e2d9252d8fff5712b2ef"},
+]
 flake8 = [
     {file = "flake8-3.9.0-py2.py3-none-any.whl", hash = "sha256:12d05ab02614b6aee8df7c36b97d1a3b2372761222b19b58621355e82acddcff"},
     {file = "flake8-3.9.0.tar.gz", hash = "sha256:78873e372b12b093da7b5e5ed302e8ad9e988b38b063b61ad937f26ca58fc5f0"},
@@ -1120,6 +1255,10 @@ jsonpointer = [
 keystoneauth1 = [
     {file = "keystoneauth1-4.3.1-py3-none-any.whl", hash = "sha256:c4a80b79bc3e0412eb127fa761e80912614f8563646ca34b62bcd9d533f93077"},
     {file = "keystoneauth1-4.3.1.tar.gz", hash = "sha256:93605430a6d1424f31659bc5685e9dc1be9a6254e88c99f00cffc0a60c648a64"},
+]
+linecache2 = [
+    {file = "linecache2-1.0.0-py2.py3-none-any.whl", hash = "sha256:e78be9c0a0dfcbac712fe04fbf92b96cddae80b1b842f24248214c8496f006ef"},
+    {file = "linecache2-1.0.0.tar.gz", hash = "sha256:4b26ff4e7110db76eeb6f5a7b64a82623839d595c2038eeda662f2a2db78e97c"},
 ]
 mccabe = [
     {file = "mccabe-0.6.1-py2.py3-none-any.whl", hash = "sha256:ab8a6258860da4b6677da4bd2fe5dc2c659cff31b3ee4f7f5d64e79735b80d42"},
@@ -1219,6 +1358,10 @@ osc-lib = [
     {file = "oslo.utils-4.8.0-py3-none-any.whl", hash = "sha256:573cb04bcc428bd47e881a16be420fb8e3f77d055a88fc4c80db5d1ee12d684f"},
     {file = "oslo.utils-4.8.0.tar.gz", hash = "sha256:193111209bed092229b75be725194a6d4f3464c2692a2ac9fb34c46cd8013edb"},
 ]
+oslotest = [
+    {file = "oslotest-4.4.1-py3-none-any.whl", hash = "sha256:1d2229a7974217c449787e97b659602f987a111dc6b1d5445032c6ffada4fd5a"},
+    {file = "oslotest-4.4.1.tar.gz", hash = "sha256:b1c4f6530685a1872c446b1a9e2ec138861f11bafacc30b7d892a25acad7a064"},
+]
 packaging = [
     {file = "packaging-20.9-py2.py3-none-any.whl", hash = "sha256:67714da7f7bc052e064859c05c595155bd1ee9f69f76557e21f051443c20947a"},
     {file = "packaging-20.9.tar.gz", hash = "sha256:5b327ac1320dc863dca72f4514ecc086f31186744b84a230374cc1fd776feae5"},
@@ -1294,6 +1437,10 @@ python-keystoneclient = [
     {file = "python-keystoneclient-4.2.0.tar.gz", hash = "sha256:0248426e483b95de395086482c077d48e45990d3b1a3e334b2ec8b2e108f5a8a"},
     {file = "python_keystoneclient-4.2.0-py3-none-any.whl", hash = "sha256:5702f387e2a3f3645459a0850ef3e92bc8fc0eb36bd2f8ba1004a50dfed1e5f4"},
 ]
+python-mimeparse = [
+    {file = "python-mimeparse-1.6.0.tar.gz", hash = "sha256:76e4b03d700a641fd7761d3cd4fdbbdcd787eade1ebfac43f877016328334f78"},
+    {file = "python_mimeparse-1.6.0-py2.py3-none-any.whl", hash = "sha256:a295f03ff20341491bfe4717a39cd0a8cc9afad619ba44b77e86b0ab8a2b8282"},
+]
 python-novaclient = [
     {file = "python-novaclient-17.4.0.tar.gz", hash = "sha256:bca1a3899c0ecf0f63a9b3e97c5d56557186bece1e2a585b26d7c5727d461822"},
     {file = "python_novaclient-17.4.0-py3-none-any.whl", hash = "sha256:47c33f896d72ce7229d82c9aa77db2dda89543688494a2d0b9d7c9815878af7b"},
@@ -1301,6 +1448,10 @@ python-novaclient = [
 python-openstackclient = [
     {file = "python-openstackclient-5.5.0.tar.gz", hash = "sha256:8d40491374172f9375ce1642ac2230b1cbb5a564320edbcc2a9ebe857fd9a880"},
     {file = "python_openstackclient-5.5.0-py3-none-any.whl", hash = "sha256:ad13fffb5caf5b85f477940cc9f90bdf4648faf6cc3821a5e4622caa82aa6289"},
+]
+python-subunit = [
+    {file = "python-subunit-1.4.0.tar.gz", hash = "sha256:042039928120fbf392e8c983d60f3d8ae1b88f90a9f8fd7188ddd9c26cad1e48"},
+    {file = "python_subunit-1.4.0-py2.py3-none-any.whl", hash = "sha256:40f34660c3da3e513cf2e59498a87ef04ebe2b5fe144fa25d476e1f888b19659"},
 ]
 pytz = [
     {file = "pytz-2021.1-py2.py3-none-any.whl", hash = "sha256:eb10ce3e7736052ed3623d49975ce333bcd712c7bb19a58b9e2089d4057d0798"},
@@ -1443,9 +1594,17 @@ stevedore = [
     {file = "stevedore-3.3.0-py3-none-any.whl", hash = "sha256:50d7b78fbaf0d04cd62411188fa7eedcb03eb7f4c4b37005615ceebe582aa82a"},
     {file = "stevedore-3.3.0.tar.gz", hash = "sha256:3a5bbd0652bf552748871eaa73a4a8dc2899786bc497a2aa1fcb4dcdb0debeee"},
 ]
+testtools = [
+    {file = "testtools-2.4.0-py2.py3-none-any.whl", hash = "sha256:36ff4998177c7d32ffe5fed3d541cb9ee62618a3b8e745c55510698997774ba4"},
+    {file = "testtools-2.4.0.tar.gz", hash = "sha256:64c974a6cca4385d05f4bbfa2deca1c39ce88ede31c3448bee86a7259a9a61c8"},
+]
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
     {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},
+]
+traceback2 = [
+    {file = "traceback2-1.4.0-py2.py3-none-any.whl", hash = "sha256:8253cebec4b19094d67cc5ed5af99bf1dba1285292226e98a31929f87a5d6b23"},
+    {file = "traceback2-1.4.0.tar.gz", hash = "sha256:05acc67a09980c2ecfedd3423f7ae0104839eccb55fc645773e1caa0951c3030"},
 ]
 typed-ast = [
     {file = "typed_ast-1.4.2-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:7703620125e4fb79b64aa52427ec192822e9f45d37d4b6625ab37ef403e1df70"},
@@ -1483,6 +1642,10 @@ typing-extensions = [
     {file = "typing_extensions-3.7.4.3-py2-none-any.whl", hash = "sha256:dafc7639cde7f1b6e1acc0f457842a83e722ccca8eef5270af2d74792619a89f"},
     {file = "typing_extensions-3.7.4.3-py3-none-any.whl", hash = "sha256:7cb407020f00f7bfc3cb3e7881628838e69d8f3fcab2f64742a5e76b2f841918"},
     {file = "typing_extensions-3.7.4.3.tar.gz", hash = "sha256:99d4073b617d30288f569d3f13d2bd7548c3a7e4c8de87db09a9d29bb3a4a60c"},
+]
+unittest2 = [
+    {file = "unittest2-1.1.0-py2.py3-none-any.whl", hash = "sha256:13f77d0875db6d9b435e1d4f41e74ad4cc2eb6e1d5c824996092b3430f088bb8"},
+    {file = "unittest2-1.1.0.tar.gz", hash = "sha256:22882a0e418c284e1f718a822b3b022944d53d2d908e1690b319a9d3eb2c0579"},
 ]
 urllib3 = [
     {file = "urllib3-1.26.4-py2.py3-none-any.whl", hash = "sha256:2f4da4594db7e1e110a944bb1b551fdf4e6c136ad42e4234131391e21eb5b0df"},
