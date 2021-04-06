@@ -4,10 +4,10 @@ from osc_lib import utils
 DEFAULT_API_VERSION = "1"
 
 # Required by the OSC plugin interface
-API_NAME = "hardware"
-API_VERSION_OPTION = "os_hardware_api_version"
+API_NAME = "inventory"
+API_VERSION_OPTION = "os_inventory_api_version"
 API_VERSIONS = {
-    "1": "hardware.v1.client.Client",
+    "1": "inventory.v1.client.Client",
 }
 
 # Required by the OSC plugin interface
