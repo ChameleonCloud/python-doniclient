@@ -1,14 +1,21 @@
 """Module for OpenStackClient Integration."""
+import logging
+
 from osc_lib import utils
+
+LOG = logging.getLogger(__name__)  # Get the logger of this module
 
 DEFAULT_API_VERSION = "1"
 
 # Required by the OSC plugin interface
 API_NAME = "inventory"
 API_VERSION_OPTION = "os_inventory_api_version"
+
+# Maps api version from service catalog to class path
 API_VERSIONS = {
-    "1": "inventory.v1.client.Client",
+    "1": "doniclient.v1.client.Client",
 }
+SERVICE_TYPE = "inventory"
 
 # Required by the OSC plugin interface
 def make_client(instance):
@@ -19,11 +26,24 @@ def make_client(instance):
 
     :param ClientManager instance: The ClientManager that owns the new client
     """
-    plugin_client = utils.get_client_class(
-        API_NAME, instance._api_version[API_NAME], API_VERSIONS
+    version = instance._api_version[API_NAME]
+    inventory_client = utils.get_client_class(
+        api_name=API_NAME,
+        version=version,
+        version_map=API_VERSIONS,
     )
 
-    client = plugin_client()
+    LOG.debug("Instantiating inventory client: %s", inventory_client)
+
+    inventory_endpoint = instance.get_endpoint_for_service_type(
+        service_type=SERVICE_TYPE,
+    )
+    client = inventory_client(
+        session=instance.session,
+        endpoint=inventory_endpoint,
+        service_type=SERVICE_TYPE,
+    )
+
     return client
 
 

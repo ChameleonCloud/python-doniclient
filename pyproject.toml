@@ -40,10 +40,10 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.plugins."openstack.cli.extension"]
-inventory = "doniclient.client"
+inventory = "doniclient.osc.plugin"
 
 [tool.poetry.plugins."openstack.inventory.v1"]
-hardware_list = "doniclient.inventory:ListHardware"
-hardware_export = "doniclient.inventory:ExportHardware"
-hardware_show = "doniclient.inventory:GetHardware"
-inventory_create = "doniclient.inventory:CreateHardware"
+hardware_list = "doniclient.osc.cli:ListHardware"
+hardware_export = "doniclient.osc.cli:ExportHardware"
+# hardware_show = "doniclient.cli:GetHardware"
+# inventory_create = "doniclient.cli:CreateHardware"
