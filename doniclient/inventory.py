@@ -96,24 +96,13 @@ class GetHardware(command.ShowOne):
         )
 
 
-class Create(command.Command):
+class CreateHardware(command.Command):
     """Create a Hardware Object in Doni."""
 
     def take_action(self, parsed_args):
         # InventoryAPI = api.BaseAPI(service_type=SERVICE_TYPE)
         # InventoryAPI.create()
         pass
-
-
-class EnrollResource(command.Command):
-    """Enroll Resource."""
-
-    def take_action(self, parsed_args):
-        # Client manager interfaces are available to plugins.
-        # This includes the OSC clients created.
-        mgr = self.app.client_manager
-        print("Foo")
-        return
 
 
 class UpdateResource(command.Command):
