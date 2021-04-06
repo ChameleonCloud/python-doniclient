@@ -52,35 +52,36 @@ class ExportHardware(ListHardware):
         return (self.columns, data_iterator)
 
 
-# class GetHardware(command.ShowOne):
-#     """List all hw items in Doni."""
+class GetHardware(command.ShowOne):
+    """List all hw items in Doni."""
 
-#     api_path = "/v1/hardware/"
-#     columns = (
-#         "name",
-#         "project_id",
-#         "hardware_type",
-#         "properties",
-#         "uuid",
-#     )
+    api_path = "/v1/hardware/"
+    columns = (
+        "name",
+        "project_id",
+        "hardware_type",
+        "properties",
+        "uuid",
+    )
 
-#     def get_parser(self, prog_name):
-#         """Add arguments to cli parser."""
-#         parser = super(GetHardware, self).get_parser(prog_name)
-#         parser.add_argument("--name", metavar="<name>", help=("name of hw item"))
-#         parser.add_argument("--uuid", metavar="<uuid>", help=("uuid of hw item"))
-#         return parser
+    def get_parser(self, prog_name):
+        """Add arguments to cli parser."""
+        parser = super(GetHardware, self).get_parser(prog_name)
+        parser.add_argument("uuid", help=("name or uuid of hw item"))
+        return parser
 
-#     def take_action(self, parsed_args):
-#         """List all hw items in Doni."""
-#         hw_api = Inventory._get_api(self)
+    def take_action(self, parsed_args):
+        """List all hw items in Doni."""
+        hw_client = self.app.client_manager.inventory
+        try:
+            data = hw_client.find(parsed_args.uuid)
+        except Exception as ex:
+            raise ex
 
-#         data = hw_api.find(self.api_path, value=parsed_args.name, attr="name")
-
-#         return (
-#             self.columns,
-#             utils.get_dict_properties(data, self.columns, formatters={}),
-#         )
+        return (
+            self.columns,
+            utils.get_dict_properties(data, self.columns, formatters={}),
+        )
 
 
 # class CreateHardware(command.Command):

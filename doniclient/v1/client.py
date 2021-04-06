@@ -13,7 +13,11 @@ class Client(api.BaseAPI):
         )
 
     def list(self, **kwargs):
-        return super().list(path="/v1/hardware/" ** kwargs)
+        return super().list(path="/v1/hardware/", **kwargs)
 
     def export(self, **kwargs):
         return super().list(path="/v1/hardware/export/", **kwargs)
+
+    def find(self, value):
+        data = super().find("/v1/hardware", value)
+        return data
