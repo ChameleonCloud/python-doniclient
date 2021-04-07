@@ -1,23 +1,33 @@
 """Creates doni client object."""
+import json
 import logging
 
-from osc_lib.api import api
+import keystoneauth1.adapter
 
 LOG = logging.getLogger(__name__)  # Get the logger of this module
 
 
-class Client(api.BaseAPI):
-    def __init__(self, session, service_type, endpoint, **kwargs):
-        super().__init__(
-            session=session, service_type=service_type, endpoint=endpoint, **kwargs
-        )
+class Client(object):
+    def __init__(self, adapter: keystoneauth1.adapter, **kwargs):
+        self.adapter = adapter
 
-    def list(self, **kwargs):
-        return super().list(path="/v1/hardware/", **kwargs)
+    def list(self):
+        resp = self.adapter.get("/v1/hardware/")
+        try:
+            return resp.json().get("hardware")
+        except json.JSONDecodeError:
+            return resp
 
-    def export(self, **kwargs):
-        return super().list(path="/v1/hardware/export/", **kwargs)
+    def export(self):
+        resp = self.adapter.get("/v1/hardware/export/")
+        try:
+            return resp.json().get("hardware")
+        except json.JSONDecodeError:
+            return resp
 
-    def find(self, value):
-        data = super().find("/v1/hardware", value)
-        return data
+    def get_by_uuid(self, uuid):
+        resp = self.adapter.get(f"/v1/hardware/{uuid}/")
+        try:
+            return resp.json()
+        except json.JSONDecodeError:
+            return resp

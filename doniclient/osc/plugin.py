@@ -1,6 +1,7 @@
 """Module for OpenStackClient Integration."""
 import logging
 
+from keystoneauth1 import adapter
 from osc_lib import utils
 
 LOG = logging.getLogger(__name__)  # Get the logger of this module
@@ -15,8 +16,6 @@ API_VERSION_OPTION = "os_inventory_api_version"
 API_VERSIONS = {
     "1": "doniclient.v1.client.Client",
 }
-SERVICE_TYPE = "inventory"
-
 # Required by the OSC plugin interface
 def make_client(instance):
     """Returns a client to the ClientManager.
@@ -35,14 +34,11 @@ def make_client(instance):
 
     LOG.debug("Instantiating inventory client: %s", inventory_client)
 
-    inventory_endpoint = instance.get_endpoint_for_service_type(
-        service_type=SERVICE_TYPE,
+    ksa_adapter = adapter.Adapter(
+        session=instance.session, service_type="inventory", interface="public"
     )
-    client = inventory_client(
-        session=instance.session,
-        endpoint=inventory_endpoint,
-        service_type=SERVICE_TYPE,
-    )
+
+    client = inventory_client(adapter=ksa_adapter)
 
     return client
 
