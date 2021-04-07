@@ -2,13 +2,13 @@
 import json
 import logging
 
-import keystoneauth1.adapter
+from keystoneauth1.adapter import Adapter as ksa_adapter
 
 LOG = logging.getLogger(__name__)  # Get the logger of this module
 
 
 class Client(object):
-    def __init__(self, adapter: keystoneauth1.adapter, **kwargs):
+    def __init__(self, adapter: ksa_adapter, **kwargs):
         self.adapter = adapter
 
     def list(self):
@@ -27,6 +27,14 @@ class Client(object):
 
     def get_by_uuid(self, uuid):
         resp = self.adapter.get(f"/v1/hardware/{uuid}/")
+        try:
+            return resp.json()
+        except json.JSONDecodeError:
+            return resp
+
+    def create(self, json, **kwargs):
+        """Create a hw object in the doni DB."""
+        resp = self.adapter.post("/v1/hardware/", json=json)
         try:
             return resp.json()
         except json.JSONDecodeError:

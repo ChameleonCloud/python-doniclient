@@ -81,26 +81,47 @@ class GetHardware(command.ShowOne):
         )
 
 
-class EnrollHardware(command.Command):
+class CreateHardware(command.Command):
     """Create a Hardware Object in Doni."""
-
-    hw_dict = {
-        "name": "foo",
-        "hardware_type": "baremetal",
-        "properties": {"value1": "foo", "value2": "bar"},
-    }
 
     def get_parser(self, prog_name):
         """Add arguments to cli parser."""
-        parser = super(EnrollHardware, self).get_parser(prog_name)
-        parser.add_argument("uuid", help=("name or uuid of hw item"))
+        parser = super(GetHardware, self).get_parser(prog_name)
+        parser.add_argument(
+            "--name", metavar="<name>", help=("human readable name of hw item")
+        )
+        parser.add_argument(
+            "--hardware_type",
+            metavar="<hardware_type>",
+            default="baremetal",
+            help=("hardware_type of item"),
+        )
+        parser.add_argument(
+            "--properties",
+            metavar="<properties>",
+            default={},
+            help=("hardware_type of item"),
+        )
         return parser
 
     def take_action(self, parsed_args):
+        """List all hw items in Doni."""
+        body = {
+            "name": parsed_args.name,
+            "hardware_type": parsed_args.hw_type,
+            "properties": {},
+        }
 
-        # InventoryAPI = api.BaseAPI(service_type=SERVICE_TYPE)
-        # InventoryAPI.create()
-        pass
+        hw_client = self.app.client_manager.inventory
+        try:
+            data = hw_client.create(body)
+        except Exception as ex:
+            raise ex
+
+        return (
+            self.columns,
+            utils.get_dict_properties(data, self.columns, formatters={}),
+        )
 
 
 class UpdateHardware(command.Command):
