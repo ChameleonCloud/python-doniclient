@@ -82,7 +82,7 @@ class GetHardware(command.ShowOne):
         )
 
 
-class CreateHardware(command.Command):
+class CreateHardware(command.ShowOne):
     """Create a Hardware Object in Doni."""
 
     optional_args = [
@@ -91,9 +91,18 @@ class CreateHardware(command.Command):
         "ipmi_terminal_port",
     ]
 
+    columns = (
+        "name",
+        "project_id",
+        "hardware_type",
+        "properties",
+        "uuid",
+    )
+
     def get_parser(self, prog_name):
         """Add arguments to cli parser."""
         parser = super(CreateHardware, self).get_parser(prog_name)
+        parser.add_argument("--dry_run", action="store_true")
         parser.add_argument(
             "--name",
             metavar="<name>",
@@ -151,12 +160,19 @@ class CreateHardware(command.Command):
             json_body["properties"][arg] = getattr(parsed_args, arg)
 
         hw_client = self.app.client_manager.inventory
-        try:
-            data = hw_client.create(json_body)
-        except (BadRequest, Conflict) as ex:
-            print(f"got error {ex.response}: {ex.response.text}")
+
+        if parsed_args.dry_run:
+            data = json_body
         else:
-            return data
+            try:
+                data = hw_client.create(json_body)
+            except (BadRequest, Conflict) as ex:
+                print(f"got error {ex.response}: {ex.response.text}")
+                raise
+        return (
+            self.columns,
+            utils.get_dict_properties(data, self.columns, formatters={}),
+        )
 
 
 class UpdateHardware(command.Command):
