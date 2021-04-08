@@ -1,7 +1,9 @@
 """Implements Doni command line interface."""
 
 import logging
+from typing import List
 
+import jsonpatch
 from keystoneauth1.exceptions import BadRequest, Conflict
 from osc_lib import utils
 from osc_lib.cli import parseractions
@@ -82,8 +84,11 @@ class GetHardware(command.ShowOne):
         )
 
 
-class CreateHardware(command.ShowOne):
-    """Create a Hardware Object in Doni."""
+class HardwareAction(command.Command):
+    """Base class for create and update."""
+
+    def __init__(self, app, app_args, cmd_name):
+        super().__init__(app, app_args, cmd_name=cmd_name)
 
     optional_args = [
         "ipmi_username",
@@ -99,31 +104,33 @@ class CreateHardware(command.ShowOne):
         "uuid",
     )
 
-    def get_parser(self, prog_name):
-        """Add arguments to cli parser."""
-        parser = super(CreateHardware, self).get_parser(prog_name)
-        parser.add_argument("--dry_run", action="store_true")
+    def _get_mgmt_args(self, parser, required: bool = True):
         parser.add_argument(
             "--name",
             metavar="<name>",
             help=("human readable name of hw item"),
-            required=True,
+            required=required,
         )
         parser.add_argument(
             "--hardware_type",
             metavar="<hardware_type>",
             default="baremetal",
             help=("hardware_type of item"),
-            required=True,
+            required=required,
         )
-
-        parser.add_argument("--mgmt_addr", metavar="<mgmt_addr>", required=True)
+        parser.add_argument("--mgmt_addr", metavar="<mgmt_addr>", required=required)
         parser.add_argument("--ipmi_username", metavar="<ipmi_username>")
         parser.add_argument("--ipmi_password", metavar="<ipmi_password>")
         parser.add_argument(
             "--ipmi_terminal_port", metavar="<ipmi_terminal_port>", type=int
         )
 
+        return parser
+
+    def get_parser(self, prog_name):
+        """Add arguments to cli parser."""
+        parser = super(HardwareAction, self).get_parser(prog_name)
+        parser.add_argument("--dry_run", action="store_true")
         parser.add_argument(
             "--interface",
             required_keys=["name", "mac"],
@@ -132,66 +139,113 @@ class CreateHardware(command.ShowOne):
                 "Specify once per interface, in the form:\n `--interface name=<name>,mac=<mac_address>`"
             ),
         )
+        parser.add_argument(
+            "--extra",
+            metavar="<key>=<value>",
+            action=parseractions.KeyValueAction,
+            help=("specify key=<value> to add to hw properties"),
+        )
+        return parser
+
+    def _parse_interfaces(self, interface_args: List):
+        interface_list = []
+        for interface in interface_args:
+            interface_list.append(
+                {
+                    "name": interface.get("name"),
+                    "mac_address": interface.get("mac"),
+                }
+            )
+        return interface_list
+
+
+class CreateHardware(HardwareAction):
+    """Create a Hardware Object in Doni."""
+
+    def __init__(self, app, app_args, cmd_name):
+        super().__init__(app, app_args, cmd_name=cmd_name)
+
+    def get_parser(self, prog_name):
+        base_parser = super().get_parser(prog_name)
+        parser = self._get_mgmt_args(base_parser, required=True)
         return parser
 
     def take_action(self, parsed_args):
         """List all hw items in Doni."""
-        json_body = {
-            "name": parsed_args.name,
-            "hardware_type": parsed_args.hardware_type,
-            "properties": {
-                "management_address": parsed_args.mgmt_addr,
-                "interfaces": [],
-            },
-        }
-
-        for interface_dict in parsed_args.interface:
-            name = interface_dict.get("name")
-            mac_addr = interface_dict.get("mac")
-
-            json_body["properties"]["interfaces"].append(
-                {
-                    "name": name,
-                    "mac_address": mac_addr,
-                }
-            )
-
-        for arg in self.optional_args:
-            json_body["properties"][arg] = getattr(parsed_args, arg)
-
         hw_client = self.app.client_manager.inventory
 
+        properties = {}
+        properties["management_address"] = parsed_args.mgmt_addr
+        properties["interfaces"] = self._parse_interfaces(parsed_args.interface)
+
+        # Set optional arguments
+        for arg in self.optional_args:
+            properties[arg] = getattr(parsed_args, arg)
+
+        body = {
+            "name": parsed_args.name,
+            "hardware_type": parsed_args.hardware_type,
+            "properties": properties,
+        }
+
         if parsed_args.dry_run:
-            data = json_body
+            print(body)
         else:
             try:
-                data = hw_client.create(json_body)
+                data = hw_client.create(body)
             except (BadRequest, Conflict) as ex:
                 print(f"got error {ex.response}: {ex.response.text}")
                 raise
-        return (
-            self.columns,
-            utils.get_dict_properties(data, self.columns, formatters={}),
-        )
+            else:
+                return data
 
 
-class UpdateHardware(command.Command):
+class UpdateHardware(HardwareAction):
     """Send JSON Patch to update resource."""
 
+    def __init__(self, app, app_args, cmd_name):
+        super().__init__(app, app_args, cmd_name=cmd_name)
+
+    def get_parser(self, prog_name):
+        """Add arguments to cli parser."""
+        base_parser = super().get_parser(prog_name)
+        parser = self._get_mgmt_args(base_parser, False)
+        parser.add_argument(
+            "--uuid",
+            metavar="<uuid>",
+            help=("human readable name of hw item"),
+            required=True,
+        )
+        return parser
+
     def take_action(self, parsed_args):
-        # Client manager interfaces are available to plugins.
-        # This includes the OSC clients created.
-        mgr = self.app.client_manager
-        print("Foo")
-        return
+        hw_client = self.app.client_manager.inventory
 
+        uuid = parsed_args.uuid
 
-# class SyncResource(command.Command):
-#     """Sync Resource."""
+        base_fields = ["name", "hardware_type"]
+        prop_fields = [
+            "management_address",
+            "ipmi_username",
+            "ipmi_password",
+            "ipmi_terminal_port",
+        ]
 
-#     def take_action(self, parsed_args):
-#         # Client manager interfaces are available to plugins.
-#         # This includes the OSC clients created.
-#         mgr = self.app.client_manager
-#         print("Foo")
-#         return
+        patch = jsonpatch.JsonPatch(
+            [
+                {"op": "add", "path": "/foo", "value": "bar"},
+                {"op": "add", "path": "/baz", "value": [1, 2, 3]},
+                {"op": "remove", "path": "/baz/1"},
+                {"op": "test", "path": "/baz", "value": [1, 3]},
+                {"op": "replace", "path": "/baz/0", "value": 42},
+                {"op": "remove", "path": "/baz/1"},
+            ]
+        )
+
+        try:
+            data = hw_client.update(uuid, patch.to_string())
+        except (BadRequest, Conflict) as ex:
+            print(f"got error {ex.response}: {ex.response.text}")
+            raise
+        else:
+            return data

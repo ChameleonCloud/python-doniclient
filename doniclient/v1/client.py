@@ -39,3 +39,9 @@ class Client(object):
             return resp.json()
         except json.JSONDecodeError:
             return resp
+
+    def delete(self, uuid):
+        return self.adapter.delete(f"/v1/hardware/{uuid}/")
+
+    def update(self, uuid, json):
+        return self.adapter.patch(f"/v1/hardware/{uuid}/", json=json)
