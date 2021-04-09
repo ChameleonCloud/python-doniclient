@@ -3,7 +3,6 @@
 import logging
 from typing import List
 
-import jsonpatch
 from keystoneauth1.exceptions import BadRequest, Conflict
 from osc_lib import utils
 from osc_lib.cli import parseractions
@@ -41,6 +40,8 @@ class ListHardware(command.Lister):
 
 
 class ExportHardware(ListHardware):
+    """Export public fields from the hw db."""
+
     def take_action(self, parsed_args):
         """Export Public hw items in Doni."""
         hw_client = self.app.client_manager.inventory
@@ -53,7 +54,7 @@ class ExportHardware(ListHardware):
 
 
 class GetHardware(command.ShowOne):
-    """List all hw items in Doni."""
+    """List specific hardware item in Doni."""
 
     api_path = "/v1/hardware/"
     columns = (
@@ -223,29 +224,26 @@ class UpdateHardware(HardwareAction):
 
         uuid = parsed_args.uuid
 
-        base_fields = ["name", "hardware_type"]
-        prop_fields = [
-            "management_address",
-            "ipmi_username",
-            "ipmi_password",
-            "ipmi_terminal_port",
-        ]
+        patch = []
 
-        patch = jsonpatch.JsonPatch(
-            [
-                {"op": "add", "path": "/foo", "value": "bar"},
-                {"op": "add", "path": "/baz", "value": [1, 2, 3]},
-                {"op": "remove", "path": "/baz/1"},
-                {"op": "test", "path": "/baz", "value": [1, 3]},
-                {"op": "replace", "path": "/baz/0", "value": 42},
-                {"op": "remove", "path": "/baz/1"},
-            ]
-        )
+        field_map = {
+            "name": "name",
+            "hardware_type": "hardware_type",
+            "management_address": "properties/management_address",
+            "ipmi_username": "properties/ipmi_username",
+            "ipmi_password": "properties/ipmi_password",
+            "ipmi_terminal_port": "properties/ipmi_terminal_port",
+        }
+
+        for key, val in field_map.items():
+            arg = getattr(parsed_args, val, None)
+            if arg:
+                patch.append({"op": "add", "path": f"/{key}", "value": arg})
 
         try:
-            data = hw_client.update(uuid, patch.to_string())
+            data = hw_client.update(uuid, patch)
         except (BadRequest, Conflict) as ex:
-            print(f"got error {ex.response}: {ex.response.text}")
+            print(f"got error: {ex.response.text}")
             raise
         else:
-            return data
+            return data.text
