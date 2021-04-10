@@ -115,7 +115,6 @@ class HardwareAction(command.Command):
         parser.add_argument(
             "--hardware_type",
             metavar="<hardware_type>",
-            default="baremetal",
             help=("hardware_type of item"),
             required=required,
         )
@@ -141,6 +140,29 @@ class HardwareAction(command.Command):
             ),
         )
         parser.add_argument(
+            "--aw_add",
+            required_keys=["start", "end"],
+            action=parseractions.MultiKeyValueAction,
+            help=(
+                "Specify once per window to add:\n`--window start=<start>,end=<end>`"
+            ),
+        )
+        parser.add_argument(
+            "--aw_update",
+            required_keys=["id", "start", "end"],
+            action=parseractions.MultiKeyValueAction,
+            help=(
+                "Specify once per window to update:\n"
+                "`--aw_update id=<id>,start=<start>,end=<end>`"
+            ),
+        )
+        parser.add_argument(
+            "--aw_delete",
+            metavar="id",
+            action="append",
+            help=("Specify once per window to delete: `--aw_delete <id>`"),
+        )
+        parser.add_argument(
             "--extra",
             metavar="<key>=<value>",
             action=parseractions.KeyValueAction,
@@ -150,7 +172,7 @@ class HardwareAction(command.Command):
 
     def _parse_interfaces(self, interface_args: List):
         interface_list = []
-        for interface in interface_args:
+        for interface in interface_args or []:
             interface_list.append(
                 {
                     "name": interface.get("name"),
@@ -235,16 +257,28 @@ class UpdateHardware(HardwareAction):
         }
 
         for key, val in field_map.items():
-            arg = getattr(parsed_args, val, None)
+            arg = getattr(parsed_args, key, None)
             if arg:
-                patch.append({"op": "add", "path": f"/{key}", "value": arg})
+                patch.append({"op": "add", "path": f"/{val}", "value": arg})
 
         interfaces = self._parse_interfaces(getattr(parsed_args, "interface"))
         for iface in interfaces:
             name = iface.get("name")
             patch.append({"op": "add", "path": f"/interface/{name}", "value": iface})
 
+        for aw in getattr(parsed_args, "aw_add") or []:
+            patch.append({"op": "add", "path": f"/availability/-", "value": aw})
+
+        for aw in getattr(parsed_args, "aw_update") or []:
+            patch.append(
+                {"op": "replace", "path": f"/availability/{name}", "value": aw}
+            )
+
+        for aw in getattr(parsed_args, "aw_delete") or []:
+            patch.append({"op": "remove", "path": f"/availability/{name}", "value": aw})
+
         try:
+            LOG.debug(f"PATCH_BODY:{patch}")
             data = hw_client.update(uuid, patch)
         except (BadRequest, Conflict) as ex:
             print(f"got error: {ex.response.text}")
