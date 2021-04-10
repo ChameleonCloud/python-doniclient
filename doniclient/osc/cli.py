@@ -212,10 +212,9 @@ class UpdateHardware(HardwareAction):
         base_parser = super().get_parser(prog_name)
         parser = self._get_mgmt_args(base_parser, False)
         parser.add_argument(
-            "--uuid",
+            dest="uuid",
             metavar="<uuid>",
-            help=("human readable name of hw item"),
-            required=True,
+            help=("unique ID of hw item"),
         )
         return parser
 
@@ -239,6 +238,11 @@ class UpdateHardware(HardwareAction):
             arg = getattr(parsed_args, val, None)
             if arg:
                 patch.append({"op": "add", "path": f"/{key}", "value": arg})
+
+        interfaces = self._parse_interfaces(getattr(parsed_args, "interface"))
+        for iface in interfaces:
+            name = iface.get("name")
+            patch.append({"op": "add", "path": f"/interface/{name}", "value": iface})
 
         try:
             data = hw_client.update(uuid, patch)
