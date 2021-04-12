@@ -4,7 +4,7 @@ import logging
 from argparse import ArgumentTypeError
 from typing import List
 
-from dateutil.parser import isoparse
+from dateutil import parser, tz
 from keystoneauth1.exceptions import HttpError
 from osc_lib import utils
 from osc_lib.cli import parseractions
@@ -42,7 +42,6 @@ class HardwareAction(command.Command):
         parser.add_argument(
             dest="uuid", metavar="<uuid>", help=("unique ID of hw item")
         )
-        return parser
 
     def parse_mgmt_args(self, parser, required: bool = True):
         parser.add_argument(
@@ -63,8 +62,6 @@ class HardwareAction(command.Command):
         parser.add_argument(
             "--ipmi_terminal_port", metavar="<ipmi_terminal_port>", type=int
         )
-
-        return parser
 
     def parse_interfaces(self, parser):
         parser.add_argument(
@@ -127,7 +124,10 @@ class HardwareAction(command.Command):
     def _valid_date(self, s):
         LOG.debug(f"Processing Date {s}")
         try:
-            return isoparse(s)
+            parsed_dt = parser.parse(s)
+            dt_with_tz = parsed_dt.replace(tzinfo=parsed_dt.tzinfo or tz.gettz())
+            LOG.debug(dt_with_tz)
+            return dt_with_tz
         except ValueError:
             msg = "Not a valid date: '{0}'.".format(s)
             raise ArgumentTypeError(msg)
@@ -266,7 +266,7 @@ class CreateHardware(HardwareAction):
 
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
-        parser = self.parse_mgmt_args(parser, required=True)
+        self.parse_mgmt_args(parser, required=True)
         return parser
 
     def take_action(self, parsed_args):
@@ -288,7 +288,7 @@ class CreateHardware(HardwareAction):
         }
 
         if parsed_args.dry_run:
-            print(body)
+            LOG.warn(body)
         else:
             try:
                 data = hw_client.create(body)
@@ -308,8 +308,8 @@ class UpdateHardware(HardwareAction):
     def get_parser(self, prog_name):
         """Add arguments to cli parser."""
         parser = super().get_parser(prog_name)
-        parser = self.parse_uuid(parser)
-        parser = self.parse_mgmt_args(parser, required=False)
+        self.parse_uuid(parser)
+        self.parse_mgmt_args(parser, required=False)
         return parser
 
     def take_action(self, parsed_args):
