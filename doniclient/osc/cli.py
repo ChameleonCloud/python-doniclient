@@ -85,6 +85,24 @@ class GetHardware(command.ShowOne):
         )
 
 
+class DeleteHardware(command.Command):
+    """List specific hardware item in Doni."""
+
+    def get_parser(self, prog_name):
+        """Add arguments to cli parser."""
+        parser = super(GetHardware, self).get_parser(prog_name)
+        parser.add_argument("uuid", help=("uuid of hw item to delete"))
+        return parser
+
+    def take_action(self, parsed_args):
+        hw_client = self.app.client_manager.inventory
+        try:
+            result = hw_client.delete(parsed_args.uuid)
+            return result.text
+        except Exception as ex:
+            raise ex
+
+
 class HardwareAction(command.Command):
     """Base class for create and update."""
 
