@@ -3,7 +3,7 @@
 import logging
 from typing import List
 
-import dateutil
+from dateutil.parser import isoparse
 from keystoneauth1.exceptions import HttpError
 from osc_lib import utils
 from osc_lib.cli import parseractions
@@ -32,7 +32,7 @@ class HardwareAction(command.Command):
         "uuid",
     )
 
-    def parse_uuid(parser):
+    def parse_uuid(self, parser):
         """Get uuid to use as path."""
         parser.add_argument(
             dest="uuid", metavar="<uuid>", help=("unique ID of hw item")
@@ -87,26 +87,23 @@ class HardwareAction(command.Command):
     def parse_availability(self, parser):
         parser.add_argument(
             "--aw_add",
-            required_keys=["start", "end"],
-            action=parseractions.MultiKeyValueAction,
-            help=(
-                "Specify once per window to add:\n`--window start=<start>,end=<end>`"
-            ),
+            action="append",
+            nargs=2,
+            metavar=("start", "end"),
+            help="specify ISO compatible date for start and end of availability window",
         )
         parser.add_argument(
             "--aw_update",
-            required_keys=["id", "start", "end"],
-            action=parseractions.MultiKeyValueAction,
-            help=(
-                "Specify once per window to update:\n"
-                "`--aw_update id=<id>,start=<start>,end=<end>`"
-            ),
+            action="append",
+            nargs=3,
+            metavar=("id", "start", "end"),
+            help=("Specify window to update by ID, then start and end dates"),
         )
         parser.add_argument(
             "--aw_delete",
             metavar="id",
             action="append",
-            help=("Specify once per window to delete: `--aw_delete <id>`"),
+            help=("Specify window to delete by ID"),
         )
 
     def get_parser(self, prog_name):
@@ -114,15 +111,9 @@ class HardwareAction(command.Command):
         parser = super().get_parser(prog_name)
         parser.add_argument("--dry_run", action="store_true")
 
-        parser = self.parse_interfaces(parser)
-        parser = self.parse_availability(parser)
+        self.parse_interfaces(parser)
+        self.parse_availability(parser)
 
-        parser.add_argument(
-            "--extra",
-            metavar="<key>=<value>",
-            action=parseractions.KeyValueAction,
-            help=("specify key=<value> to add to hw properties"),
-        )
         return parser
 
     def _format_iface(self, interface_args: List):
