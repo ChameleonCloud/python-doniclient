@@ -43,5 +43,8 @@ class Client(object):
     def delete(self, uuid):
         return self.adapter.delete(f"/v1/hardware/{uuid}/")
 
+    def sync(self, uuid):
+        return self.adapter.post(f"/v1/hardware/{uuid}/sync")
+
     def update(self, uuid, json):
         return self.adapter.patch(f"/v1/hardware/{uuid}/", json=json)
