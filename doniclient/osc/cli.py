@@ -93,7 +93,6 @@ class HardwareAction(command.Command):
             action="append",
             nargs=2,
             metavar=("start", "end"),
-            type=self._valid_date,
             help="specify ISO compatible date for start and end of availability window",
         )
         parser.add_argument(
@@ -144,11 +143,17 @@ class HardwareAction(command.Command):
 
         return interface_list
 
-    def _format_window(self, window_dict):
+    def _format_window(self, window_args):
         result = {}
-        result["index"] = int(window_dict[0])
-        result["start"] = self._valid_date(window_dict[1])
-        result["end"] = self._valid_date(window_dict[2])
+        result["start"] = self._valid_date(window_args[0])
+        result["end"] = self._valid_date(window_args[1])
+        return result
+
+    def _format_window_id(self, window_args):
+        result = {}
+        result["index"] = int(window_args[0])
+        result["start"] = self._valid_date(window_args[1])
+        result["end"] = self._valid_date(window_args[2])
         return result
 
 
@@ -346,11 +351,12 @@ class UpdateHardware(HardwareAction):
 
         # Update Availability Windows
         for aw in getattr(parsed_args, "aw_add") or []:
-            patch.append({"op": "add", "path": f"/availability/-", "value": aw})
+            window = self._format_window(aw)
+            patch.append({"op": "add", "path": f"/availability/-", "value": window})
 
         for aw in getattr(parsed_args, "aw_update") or []:
             LOG.debug(aw)
-            window = self._format_window(aw)
+            window = self._format_window_id(aw)
             index = window.pop("index")
             patch.append(
                 {"op": "replace", "path": f"/availability/{index}", "value": window}
