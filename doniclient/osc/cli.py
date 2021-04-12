@@ -47,7 +47,11 @@ class HardwareAction(command.Command):
         parser.add_argument(
             "--name",
             metavar="<name>",
-            help=("human readable name of hw item"),
+            help=(
+                "Name of the hardware object. Best practice is to use a "
+                "universally unique identifier, such has serial number or chassis ID. "
+                "This will aid in disambiguating systems."
+            ),
             required=required,
         )
         parser.add_argument(
