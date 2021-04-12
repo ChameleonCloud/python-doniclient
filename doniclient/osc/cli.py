@@ -90,27 +90,13 @@ class HardwareAction(command.Command):
         )
 
     def parse_availability(self, parser):
-        def _valid_date(s):
-            try:
-                return isoparse(s)
-            except ValueError:
-                msg = "Not a valid date: '{0}'.".format(s)
-                raise ArgumentTypeError(msg)
-
-        def _valid_date_tuple(tup: tuple):
-            result = tuple(_valid_date(item) for item in tup)
-            return result
-
-        def _valid_int_date_date_tuple(tup: tuple):
-            result = tuple((int(tup[0])), _valid_date(tup[1]), _valid_date(tup[2]))
-            return result
 
         parser.add_argument(
             "--aw_add",
             action="append",
             nargs=2,
             metavar=("start", "end"),
-            type=_valid_date_tuple,
+            type=self._valid_date,
             help="specify ISO compatible date for start and end of availability window",
         )
         parser.add_argument(
@@ -118,7 +104,6 @@ class HardwareAction(command.Command):
             action="append",
             nargs=3,
             metavar=("id", "start", "end"),
-            type=_valid_int_date_date_tuple,
             help=("Specify window to update by ID, then start and end dates"),
         )
         parser.add_argument(
@@ -139,6 +124,14 @@ class HardwareAction(command.Command):
 
         return parser
 
+    def _valid_date(self, s):
+        LOG.debug(f"Processing Date {s}")
+        try:
+            return isoparse(s)
+        except ValueError:
+            msg = "Not a valid date: '{0}'.".format(s)
+            raise ArgumentTypeError(msg)
+
     def _format_iface(self, interface_args: List):
         interface_list = []
         key_map = {
@@ -150,6 +143,13 @@ class HardwareAction(command.Command):
             interface_list.append(iface)
 
         return interface_list
+
+    def _format_window(self, window_dict):
+        result = {}
+        result["index"] = int(window_dict[0])
+        result["start"] = self._valid_date(window_dict[1])
+        result["end"] = self._valid_date(window_dict[2])
+        return result
 
 
 class ListHardware(command.Lister):
@@ -349,13 +349,16 @@ class UpdateHardware(HardwareAction):
             patch.append({"op": "add", "path": f"/availability/-", "value": aw})
 
         for aw in getattr(parsed_args, "aw_update") or []:
-            name = aw.get("name")
+            LOG.debug(aw)
+            window = self._format_window(aw)
+            index = window.pop("index")
             patch.append(
-                {"op": "replace", "path": f"/availability/{name}", "value": aw}
+                {"op": "replace", "path": f"/availability/{index}", "value": window}
             )
-        for aw in getattr(parsed_args, "aw_delete") or []:
-            name = aw.get("name")
-            patch.append({"op": "remove", "path": f"/availability/{name}", "value": aw})
+        for index in getattr(parsed_args, "aw_delete") or []:
+            patch.append(
+                {"op": "remove", "path": f"/availability/{index}", "value": aw}
+            )
 
         if patch:
             try:
