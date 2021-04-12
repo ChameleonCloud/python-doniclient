@@ -1,6 +1,7 @@
 """Implements Doni command line interface."""
 
 import logging
+from argparse import ArgumentTypeError
 from typing import List
 
 from dateutil.parser import isoparse
@@ -85,11 +86,27 @@ class HardwareAction(command.Command):
         )
 
     def parse_availability(self, parser):
+        def _valid_date(s):
+            try:
+                return isoparse(s)
+            except ValueError:
+                msg = "Not a valid date: '{0}'.".format(s)
+                raise ArgumentTypeError(msg)
+
+        def _valid_date_tuple(tup: tuple):
+            result = tuple(_valid_date(item) for item in tup)
+            return result
+
+        def _valid_int_date_date_tuple(tup: tuple):
+            result = tuple((int(tup[0])), _valid_date(tup[1]), _valid_date(tup[2]))
+            return result
+
         parser.add_argument(
             "--aw_add",
             action="append",
             nargs=2,
             metavar=("start", "end"),
+            type=_valid_date_tuple,
             help="specify ISO compatible date for start and end of availability window",
         )
         parser.add_argument(
@@ -97,11 +114,13 @@ class HardwareAction(command.Command):
             action="append",
             nargs=3,
             metavar=("id", "start", "end"),
+            type=_valid_int_date_date_tuple,
             help=("Specify window to update by ID, then start and end dates"),
         )
         parser.add_argument(
             "--aw_delete",
             metavar="id",
+            type=int,
             action="append",
             help=("Specify window to delete by ID"),
         )
