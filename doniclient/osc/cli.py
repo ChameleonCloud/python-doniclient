@@ -3,6 +3,7 @@
 import logging
 from typing import List
 
+import dateutil
 from keystoneauth1.exceptions import HttpError
 from osc_lib import utils
 from osc_lib.cli import parseractions
