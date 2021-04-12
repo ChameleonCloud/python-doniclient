@@ -132,12 +132,25 @@ class HardwareAction(command.Command):
         parser = super(HardwareAction, self).get_parser(prog_name)
         parser.add_argument("--dry_run", action="store_true")
         parser.add_argument(
-            "--interface",
+            "--iface_add",
             required_keys=["name", "mac"],
             action=parseractions.MultiKeyValueAction,
             help=(
                 "Specify once per interface, in the form:\n `--interface name=<name>,mac=<mac_address>`"
             ),
+        )
+        parser.add_argument(
+            "--iface_update",
+            required_keys=["name", "mac", "index"],
+            action=parseractions.MultiKeyValueAction,
+            help=(
+                "Specify once per interface, in the form:\n `--interface name=<name>,mac=<mac_address>,index=<index>`"
+            ),
+        )
+        parser.add_argument(
+            "--iface_delete",
+            metavar="index",
+            help=("Specify interface to delete, by index`"),
         )
         parser.add_argument(
             "--aw_add",
@@ -177,6 +190,7 @@ class HardwareAction(command.Command):
                 {
                     "name": interface.get("name"),
                     "mac_address": interface.get("mac"),
+                    "index": interface.get("index"),
                 }
             )
         return interface_list
@@ -199,7 +213,7 @@ class CreateHardware(HardwareAction):
 
         properties = {}
         properties["management_address"] = parsed_args.mgmt_addr
-        properties["interfaces"] = self._parse_interfaces(parsed_args.interface)
+        properties["interfaces"] = self._parse_interfaces(parsed_args.iface_add)
 
         # Set optional arguments
         for arg in self.optional_args:
@@ -242,11 +256,8 @@ class UpdateHardware(HardwareAction):
 
     def take_action(self, parsed_args):
         hw_client = self.app.client_manager.inventory
-
         uuid = parsed_args.uuid
-
         patch = []
-
         field_map = {
             "name": "name",
             "hardware_type": "hardware_type",
@@ -261,20 +272,29 @@ class UpdateHardware(HardwareAction):
             if arg:
                 patch.append({"op": "add", "path": f"/{val}", "value": arg})
 
-        interfaces = self._parse_interfaces(getattr(parsed_args, "interface"))
-        for iface in interfaces:
-            name = iface.get("name")
-            patch.append({"op": "add", "path": f"/interface/{name}", "value": iface})
+        # Update Interfaces
+        for iface in self._parse_interfaces(getattr(parsed_args, "iface_add")):
+            patch.append({"op": "add", "path": f"/interface/-", "value": iface})
 
+        for iface in self._parse_interfaces(getattr(parsed_args, "iface_update")):
+            index = iface.pop("index")
+            patch.append(
+                {"op": "replace", "path": f"/interface/{index}", "value": iface}
+            )
+        for iface in self._parse_interfaces(getattr(parsed_args, "iface_delete")):
+            patch.append({"op": "remove", "path": f"/interface/{index}"})
+
+        # Update Availability Windows
         for aw in getattr(parsed_args, "aw_add") or []:
             patch.append({"op": "add", "path": f"/availability/-", "value": aw})
 
         for aw in getattr(parsed_args, "aw_update") or []:
+            name = aw.get("name")
             patch.append(
                 {"op": "replace", "path": f"/availability/{name}", "value": aw}
             )
-
         for aw in getattr(parsed_args, "aw_delete") or []:
+            name = aw.get("name")
             patch.append({"op": "remove", "path": f"/availability/{name}", "value": aw})
 
         try:
