@@ -13,6 +13,10 @@ from osc_lib.command import command
 LOG = logging.getLogger(__name__)  # Get the logger of this module
 
 
+class DoniClientError(BaseException):
+    """Base Error Class for Doni Client."""
+
+
 class HardwareAction(command.Command):
     """Base class for create and update."""
 
@@ -220,7 +224,7 @@ class DeleteHardware(command.Command):
     def get_parser(self, prog_name):
         """Add arguments to cli parser."""
         parser = super().get_parser(prog_name)
-        HardwareAction.parse_uuid(parser)
+        HardwareAction.parse_uuid(self, parser)
         return parser
 
     def take_action(self, parsed_args):
@@ -240,7 +244,7 @@ class SyncHardware(command.Command):
     def get_parser(self, prog_name):
         """Add arguments to cli parser."""
         parser = super().get_parser(prog_name)
-        HardwareAction.parse_uuid(parser)
+        HardwareAction.parse_uuid(self, parser)
         return parser
 
     def take_action(self, parsed_args):
@@ -305,12 +309,13 @@ class UpdateHardware(HardwareAction):
         """Add arguments to cli parser."""
         parser = super().get_parser(prog_name)
         parser = self.parse_uuid(parser)
-        parser = self.parse_mgmt_args(parser, required=True)
+        parser = self.parse_mgmt_args(parser, required=False)
         return parser
 
     def take_action(self, parsed_args):
         hw_client = self.app.client_manager.inventory
         uuid = parsed_args.uuid
+        LOG.debug(parsed_args)
         patch = []
         field_map = {
             "name": "name",
@@ -335,7 +340,7 @@ class UpdateHardware(HardwareAction):
             patch.append(
                 {"op": "replace", "path": f"/interface/{index}", "value": iface}
             )
-        for iface in self.getattr(parsed_args, "iface_delete"):
+        for iface in getattr(parsed_args, "iface_delete") or []:
             index = iface.get("index")
             patch.append({"op": "remove", "path": f"/interface/{index}"})
 
@@ -352,11 +357,14 @@ class UpdateHardware(HardwareAction):
             name = aw.get("name")
             patch.append({"op": "remove", "path": f"/availability/{name}", "value": aw})
 
-        try:
-            LOG.debug(f"PATCH_BODY:{patch}")
-            data = hw_client.update(uuid, patch)
-        except HttpError as ex:
-            LOG.error(ex.response.text)
-            raise ex
+        if patch:
+            try:
+                LOG.debug(f"PATCH_BODY:{patch}")
+                data = hw_client.update(uuid, patch)
+            except HttpError as ex:
+                LOG.error(ex.response.text)
+                raise ex
+            else:
+                return data.text
         else:
-            return data.text
+            LOG.warn("No updates to send")
