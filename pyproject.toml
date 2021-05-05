@@ -20,14 +20,14 @@ description = ""
 authors = ["Michael Sherman <shermanm@uchicago.edu>"]
 
 [tool.poetry.dependencies]
-python = "^3.6"
-osc-lib = "^1.14.1"
+python = "^3.6.2"
+osc-lib = "^2.3"
 python-openstackclient = {version = "^5.5.0", extras = ["cli"]}
 python-dateutil = "^2.8.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2"
-black = "^20.8b1"
+black = {version = "^21", allow-prereleases = true}
 flake8 = "^3.9.0"
 flake8-bugbear = "^21.4.1"
 pytest-watch = "^4.2.0"
@@ -45,7 +45,8 @@ inventory = "doniclient.osc.plugin"
 
 [tool.poetry.plugins."openstack.inventory.v1"]
 hardware_list = "doniclient.osc.cli:ListHardware"
-hardware_export = "doniclient.osc.cli:ExportHardware"
+hardware_import = "doniclient.osc.cli:ImportHardware"
+# hardware_export = "doniclient.osc.cli:ExportHardware"
 hardware_show = "doniclient.osc.cli:GetHardware"
 hardware_create = "doniclient.osc.cli:CreateHardware"
 hardware_set = "doniclient.osc.cli:UpdateHardware"
