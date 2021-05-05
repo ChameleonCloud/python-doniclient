@@ -2,7 +2,8 @@
 
 import json
 import logging
-from argparse import ArgumentParser, ArgumentTypeError
+from argparse import ArgumentTypeError, FileType
+from sys import stdin
 from typing import DefaultDict, List
 
 from dateutil import parser, tz
@@ -138,7 +139,9 @@ class SyncHardware(ParseUUID):
         return result.text
 
 
-class ParseCreateArgs(BaseParser):
+class CreateHardware(BaseParser):
+    """Create a Hardware Object in Doni."""
+
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
         parser.add_argument(
@@ -173,10 +176,6 @@ class ParseCreateArgs(BaseParser):
             required=True,
         )
         return parser
-
-
-class CreateHardware(ParseCreateArgs):
-    """Create a Hardware Object in Doni."""
 
     def take_action(self, parsed_args):
         """Create new HW item."""
@@ -382,3 +381,25 @@ class UpdateHardware(ParseUUID):
                 return data.text
         else:
             LOG.warn("No updates to send")
+
+
+class ImportHardware(BaseParser):
+    def get_parser(self, prog_name):
+        parser = super().get_parser(prog_name)
+        parser.add_argument("-f", "--file", help="JSON input file", type=FileType("r"))
+        return parser
+
+    def take_action(self, parsed_args):
+        hw_client = self.app.client_manager.inventory
+        with parsed_args.file as f:
+            for item in json.load(f):
+                if parsed_args.dry_run:
+                    LOG.warn(item)
+                else:
+                    try:
+                        data = hw_client.create(item)
+                    except HttpError as ex:
+                        LOG.error(ex.response.text)
+                        raise ex
+                    else:
+                        LOG.debug(data)

@@ -45,6 +45,7 @@ inventory = "doniclient.osc.plugin"
 
 [tool.poetry.plugins."openstack.inventory.v1"]
 hardware_list = "doniclient.osc.cli:ListHardware"
+hardware_import = "doniclient.osc.cli:ImportHardware"
 # hardware_export = "doniclient.osc.cli:ExportHardware"
 hardware_show = "doniclient.osc.cli:GetHardware"
 hardware_create = "doniclient.osc.cli:CreateHardware"
