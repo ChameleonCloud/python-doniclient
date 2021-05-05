@@ -40,30 +40,6 @@ class BaseParser(command.Command):
             )
         return interface_list
 
-    def _valid_date(self, s):
-        LOG.debug(f"Processing Date {s}")
-        try:
-            parsed_dt = parser.parse(s)
-            dt_with_tz = parsed_dt.replace(tzinfo=parsed_dt.tzinfo or tz.gettz())
-            LOG.debug(dt_with_tz)
-            return dt_with_tz
-        except ValueError:
-            msg = "Not a valid date: '{0}'.".format(s)
-            raise ArgumentTypeError(msg)
-
-    def _format_window(self, window_args):
-        result = {}
-        result["start"] = self._valid_date(window_args[0])
-        result["end"] = self._valid_date(window_args[1])
-        return result
-
-    def _format_window_id(self, window_args):
-        result = {}
-        result["index"] = int(window_args[0])
-        result["start"] = self._valid_date(window_args[1])
-        result["end"] = self._valid_date(window_args[2])
-        return result
-
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
         parser.add_argument("-d", "--dry-run", "--dry_run", action="store_true")
@@ -235,12 +211,8 @@ class CreateHardware(ParseCreateArgs):
 class UpdateHardware(ParseUUID):
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
-        subparsers = parser.add_subparsers(dest="cmd", required=True)
 
-        # Subparser for management properties
-        parse_mgmt = subparsers.add_parser("mgmt")
-        parse_mgmt.set_defaults(func=self._handle_mgmt)
-        parse_mgmt.add_argument(
+        parser.add_argument(
             "--name",
             metavar="<name>",
             help=(
@@ -249,17 +221,19 @@ class UpdateHardware(ParseUUID):
                 "This will aid in disambiguating systems."
             ),
         )
-        parse_mgmt.add_argument(
+        parser.add_argument(
             "--hardware_type",
             metavar="<hardware_type>",
             help=("hardware_type of item"),
         )
-        parse_mgmt.add_argument("--mgmt_addr", metavar="<mgmt_addr>")
-        parse_mgmt.add_argument("--ipmi_username", metavar="<ipmi_username>")
-        parse_mgmt.add_argument("--ipmi_password", metavar="<ipmi_password>")
-        parse_mgmt.add_argument(
+        parser.add_argument("--mgmt_addr", metavar="<mgmt_addr>")
+        parser.add_argument("--ipmi_username", metavar="<ipmi_username>")
+        parser.add_argument("--ipmi_password", metavar="<ipmi_password>")
+        parser.add_argument(
             "--ipmi_terminal_port", metavar="<ipmi_terminal_port>", type=int
         )
+
+        subparsers = parser.add_subparsers(help="Select property to update.")
 
         parse_iface = subparsers.add_parser("interface")
         parse_iface.set_defaults(func=self._handle_ifaces)
@@ -310,22 +284,6 @@ class UpdateHardware(ParseUUID):
         )
         return parser
 
-    def _handle_mgmt(self, parsed_args):
-        patch = []
-        field_map = {
-            "name": "name",
-            "hardware_type": "hardware_type",
-            "management_address": "properties/management_address",
-            "ipmi_username": "properties/ipmi_username",
-            "ipmi_password": "properties/ipmi_password",
-            "ipmi_terminal_port": "properties/ipmi_terminal_port",
-        }
-        for key, val in field_map.items():
-            arg = getattr(parsed_args, key, None)
-            if arg:
-                patch.append({"op": "add", "path": f"/{val}", "value": arg})
-        return patch
-
     def _handle_ifaces(self, parsed_args):
         # Update Interfaces
         patch = []
@@ -342,6 +300,30 @@ class UpdateHardware(ParseUUID):
             patch.append({"op": "remove", "path": f"/interface/{index}"})
         return patch
 
+    def _valid_date(self, s):
+        LOG.debug(f"Processing Date {s}")
+        try:
+            parsed_dt = parser.parse(s)
+            dt_with_tz = parsed_dt.replace(tzinfo=parsed_dt.tzinfo or tz.gettz())
+            LOG.debug(dt_with_tz)
+            return dt_with_tz
+        except ValueError:
+            msg = "Not a valid date: '{0}'.".format(s)
+            raise ArgumentTypeError(msg)
+
+    def _format_window(self, window_args):
+        result = {}
+        result["start"] = self._valid_date(window_args[0])
+        result["end"] = self._valid_date(window_args[1])
+        return result
+
+    def _format_window_id(self, window_args):
+        result = {}
+        result["index"] = int(window_args[0])
+        result["start"] = self._valid_date(window_args[1])
+        result["end"] = self._valid_date(window_args[2])
+        return result
+
     def _handle_windows(self, parsed_args):
         patch = []
         # Update Availability Windows
@@ -357,9 +339,7 @@ class UpdateHardware(ParseUUID):
                 {"op": "replace", "path": f"/availability/{index}", "value": window}
             )
         for index in getattr(parsed_args, "delete") or []:
-            patch.append(
-                {"op": "remove", "path": f"/availability/{index}", "value": aw}
-            )
+            patch.append({"op": "remove", "path": f"/availability/{index}"})
         return patch
 
     def take_action(self, parsed_args):
@@ -368,14 +348,26 @@ class UpdateHardware(ParseUUID):
         uuid = parsed_args.uuid
         LOG.debug(parsed_args)
 
-        subparser = parsed_args.func
+        patch = []
+        field_map = {
+            "name": "name",
+            "hardware_type": "hardware_type",
+            "management_address": "properties/management_address",
+            "ipmi_username": "properties/ipmi_username",
+            "ipmi_password": "properties/ipmi_password",
+            "ipmi_terminal_port": "properties/ipmi_terminal_port",
+        }
+        for key, val in field_map.items():
+            arg = getattr(parsed_args, key, None)
+            if arg:
+                patch.append({"op": "add", "path": f"/{val}", "value": arg})
+
+        subparser = getattr(parsed_args, "func", None)
         if subparser:
-            patch = subparser(parsed_args)
-        else:
-            patch = []
+            patch.extend(subparser(parsed_args))
 
         if parsed_args.dry_run:
-            LOG.warn(parsed_args)
+            # LOG.warn(parsed_args)
             LOG.warn(patch)
             return None
 
