@@ -21,9 +21,10 @@ authors = ["Michael Sherman <shermanm@uchicago.edu>"]
 
 [tool.poetry.dependencies]
 python = "^3.6.2"
-osc-lib = "^2.3"
-python-openstackclient = {version = "^5.5.0", extras = ["cli"]}
+osc-lib = "^1.14.1"
+python-openstackclient = {version = "^4.0.2", extras = ["cli"]}
 python-dateutil = "^2.8.0"
+keystoneauth1 = ""
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2"
