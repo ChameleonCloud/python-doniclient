@@ -30,17 +30,6 @@ class OutputFormat:
 
 
 class BaseParser(command.Command):
-    def _format_iface(self, interface_args: List):
-        interface_list = []
-        for interface in interface_args or []:
-            interface_list.append(
-                {
-                    "name": interface.get("name"),
-                    "mac_address": interface.get("mac"),
-                }
-            )
-        return interface_list
-
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
         parser.add_argument("-d", "--dry-run", "--dry_run", action="store_true")
@@ -205,6 +194,17 @@ class CreateHardware(BaseParser):
                 raise ex
 
             return data
+
+    def _format_iface(self, interface_args: List):
+        interface_list = []
+        for interface in interface_args or []:
+            interface_list.append(
+                {
+                    "name": interface.get("name"),
+                    "mac_address": interface.get("mac"),
+                }
+            )
+        return interface_list
 
 
 class UpdateHardware(ParseUUID):
