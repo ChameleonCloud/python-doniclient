@@ -15,7 +15,7 @@ known_first_party = "doniclient"
 
 [tool.poetry]
 name = "doniclient"
-version = "0.1.5"
+version = "0.2.0"
 description = "This is a plugin for the openstack commandline client, to enable support for the Doni hardware inventory project"
 authors = ["Michael Sherman <shermanm@uchicago.edu>"]
 
@@ -52,3 +52,7 @@ hardware_create = "doniclient.osc.cli:CreateHardware"
 hardware_set = "doniclient.osc.cli:UpdateHardware"
 hardware_delete = "doniclient.osc.cli:DeleteHardware"
 hardware_sync = "doniclient.osc.cli:SyncHardware"
+hardware_availability_list = "doniclient.osc.availability:ListHardwareAvailability"
+hardware_availability_set = "doniclient.osc.availability:UpdateHardwareAvailability"
+hardware_availability_add = "doniclient.osc.availability:AddHardwareAvailability"
+hardware_availability_remove = "doniclient.osc.availability:RemoveHardwareAvailability"
