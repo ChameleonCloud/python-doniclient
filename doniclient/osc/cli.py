@@ -33,20 +33,11 @@ class BaseParser(command.Command):
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
         parser.add_argument("-d", "--dry-run", "--dry_run", action="store_true")
+        if self.require_hardware:
+            parser.add_argument(
+                dest="uuid", metavar="<uuid>", help=("unique ID of hardware item")
+            )
         return parser
-
-
-class ParseUUID(BaseParser):
-    """Base class for show, sync, delete, and update."""
-
-    def get_parser(self, prog_name):
-        """Get uuid to use as path."""
-        parser = super().get_parser(prog_name)
-        parser.add_argument(
-            dest="uuid", metavar="<uuid>", help=("unique ID of hw item")
-        )
-        return parser
-
 
 class ListHardware(command.Lister):
     """List all hardware in the Doni database."""
@@ -80,9 +71,9 @@ class ListHardware(command.Lister):
         return (self.columns, data_iterator)
 
 
-class GetHardware(ParseUUID, command.ShowOne):
+class GetHardware(BaseParser, command.ShowOne):
     """List specific hardware item in Doni."""
-
+    require_hardware = True
     columns = OutputFormat.columns
 
     def take_action(self, parsed_args):
@@ -100,8 +91,10 @@ class GetHardware(ParseUUID, command.ShowOne):
         )
 
 
-class DeleteHardware(ParseUUID):
+class DeleteHardware(BaseParser):
     """Delete specific hardware item in Doni."""
+
+    require_hardware = True
 
     def take_action(self, parsed_args):
         hw_client = self.app.client_manager.inventory
@@ -114,8 +107,10 @@ class DeleteHardware(ParseUUID):
         return result.text
 
 
-class SyncHardware(ParseUUID):
+class SyncHardware(BaseParser):
     """Sync specific hardware item in Doni."""
+
+    require_hardware = True
 
     def take_action(self, parsed_args):
         hw_client = self.app.client_manager.inventory
@@ -207,7 +202,36 @@ class CreateHardware(BaseParser):
         return interface_list
 
 
-class UpdateHardware(ParseUUID):
+class HardwarePatchCommand(BaseParser):
+    require_hardware = True
+
+    def get_patch(self, parsed_args):
+        return []
+
+    def take_action(self, parsed_args):
+        hw_client = self.app.client_manager.inventory
+        hw_uuid = parsed_args.uuid
+
+        patch = self.get_patch(parsed_args)
+
+        if parsed_args.dry_run:
+            LOG.info(patch)
+            return None
+
+        if patch:
+            try:
+                LOG.debug(f"PATCH_BODY:{patch}")
+                res = hw_client.update(hw_uuid, patch)
+            except HttpError as ex:
+                LOG.error(ex.response.text)
+                raise ex
+            else:
+                return res.json()
+        else:
+            LOG.info("No updates to send")
+
+
+class UpdateHardware(HardwarePatchCommand):
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
 
@@ -241,7 +265,7 @@ class UpdateHardware(ParseUUID):
             required_keys=["name", "mac"],
             action=parseractions.MultiKeyValueAction,
             help=(
-                "Specify once per interface, in the form:\n `--interface name=<name>,mac=<mac_address>`"
+                "Specify once per interface, in the form:\n `--add name=<name>,mac=<mac_address>`"
             ),
         )
         parse_iface.add_argument(
@@ -249,7 +273,7 @@ class UpdateHardware(ParseUUID):
             required_keys=["name", "mac", "index"],
             action=parseractions.MultiKeyValueAction,
             help=(
-                "Specify once per interface, in the form:\n `--interface name=<name>,mac=<mac_address>,index=<index>`"
+                "Specify once per interface, in the form:\n `--update name=<name>,mac=<mac_address>,index=<index>`"
             ),
         )
         parse_iface.add_argument(
@@ -258,29 +282,6 @@ class UpdateHardware(ParseUUID):
             help=("Specify interface to delete, by index`"),
         )
 
-        aw_parser = subparsers.add_parser("availability")
-        aw_parser.set_defaults(func=self._handle_windows)
-        aw_parser.add_argument(
-            "--add",
-            action="append",
-            nargs=2,
-            metavar=("start", "end"),
-            help="specify ISO compatible date for start and end of availability window",
-        )
-        aw_parser.add_argument(
-            "--update",
-            action="append",
-            nargs=3,
-            metavar=("id", "start", "end"),
-            help=("Specify window to update by ID, then start and end dates"),
-        )
-        aw_parser.add_argument(
-            "--delete",
-            metavar="id",
-            type=int,
-            action="append",
-            help=("Specify window to delete by ID"),
-        )
         return parser
 
     def _handle_ifaces(self, parsed_args):
@@ -299,54 +300,7 @@ class UpdateHardware(ParseUUID):
             patch.append({"op": "remove", "path": f"/interface/{index}"})
         return patch
 
-    def _valid_date(self, s):
-        LOG.debug(f"Processing Date {s}")
-        try:
-            parsed_dt = parser.parse(s)
-            dt_with_tz = parsed_dt.replace(tzinfo=parsed_dt.tzinfo or tz.gettz())
-            LOG.debug(dt_with_tz)
-            return dt_with_tz
-        except ValueError:
-            msg = "Not a valid date: '{0}'.".format(s)
-            raise ArgumentTypeError(msg)
-
-    def _format_window(self, window_args):
-        result = {}
-        result["start"] = self._valid_date(window_args[0])
-        result["end"] = self._valid_date(window_args[1])
-        return result
-
-    def _format_window_id(self, window_args):
-        result = {}
-        result["index"] = int(window_args[0])
-        result["start"] = self._valid_date(window_args[1])
-        result["end"] = self._valid_date(window_args[2])
-        return result
-
-    def _handle_windows(self, parsed_args):
-        patch = []
-        # Update Availability Windows
-        for aw in getattr(parsed_args, "add") or []:
-            window = self._format_window(aw)
-            patch.append({"op": "add", "path": f"/availability/-", "value": window})
-
-        for aw in getattr(parsed_args, "update") or []:
-            LOG.debug(aw)
-            window = self._format_window_id(aw)
-            index = window.pop("index")
-            patch.append(
-                {"op": "replace", "path": f"/availability/{index}", "value": window}
-            )
-        for index in getattr(parsed_args, "delete") or []:
-            patch.append({"op": "remove", "path": f"/availability/{index}"})
-        return patch
-
-    def take_action(self, parsed_args):
-        """Send JSON Patch to update resource."""
-        hw_client = self.app.client_manager.inventory
-        uuid = parsed_args.uuid
-        LOG.debug(parsed_args)
-
+    def get_patch(self, parsed_args):
         patch = []
         field_map = {
             "name": "name",
@@ -365,23 +319,7 @@ class UpdateHardware(ParseUUID):
         if subparser:
             patch.extend(subparser(parsed_args))
 
-        if parsed_args.dry_run:
-            # LOG.warn(parsed_args)
-            LOG.warn(patch)
-            return None
-
-        if patch:
-            try:
-                LOG.debug(f"PATCH_BODY:{patch}")
-                data = hw_client.update(uuid, patch)
-            except HttpError as ex:
-                LOG.error(ex.response.text)
-                raise ex
-            else:
-                return data.text
-        else:
-            LOG.warn("No updates to send")
-
+        return patch
 
 class ImportHardware(BaseParser):
     def get_parser(self, prog_name):

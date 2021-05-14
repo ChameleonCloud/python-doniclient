@@ -32,6 +32,13 @@ class Client(object):
         except json.JSONDecodeError:
             return resp
 
+    def get_availability(self, hardware_uuid: str):
+        resp = self.adapter.get(f"/v1/hardware/{hardware_uuid}/availability")
+        try:
+            return resp.json().get("availability", [])
+        except json.JSONDecodeError:
+            return resp
+
     def create(self, json, **kwargs):
         """Create a hw object in the doni DB."""
         resp = self.adapter.post("/v1/hardware/", json=json)
