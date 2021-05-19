@@ -1,0 +1,28 @@
+name: CI
+
+env:
+  # This should match the default python_version build arg
+  PYTHON_VERSION: 3.8
+  XDG_CACHE_HOME: /tmp/.cache
+on:
+  push:
+  pull_request:
+  release:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: abatilo/actions-poetry@v2.1.2
+      - uses: actions/cache@v2
+        with:
+          path: ${{ env.XDG_CACHE_HOME }}
+          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+            ${{ runner.os }}-
+      - run: poetry install
+      - run: poetry build
