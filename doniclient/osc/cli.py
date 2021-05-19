@@ -42,6 +42,7 @@ class BaseParser(command.Command):
             )
         return parser
 
+
 class ListHardware(command.Lister):
     """List all hardware in the Doni database."""
 
@@ -76,6 +77,7 @@ class ListHardware(command.Lister):
 
 class GetHardware(BaseParser, command.ShowOne):
     """List specific hardware item in Doni."""
+
     require_hardware = True
     columns = OutputFormat.columns
 
@@ -153,12 +155,19 @@ class CreateHardware(BaseParser):
         parser.add_argument(
             "--ipmi_terminal_port", metavar="<ipmi_terminal_port>", type=int
         )
+
+        required_keys = ["mac_address"]
+        optional_keys = ["name", "switch_info", "switch_port_id", "switch_id"]
         parser.add_argument(
             "--interface",
-            required_keys=["name", "mac"],
+            required_keys=required_keys,
+            optional_keys=optional_keys,
             action=parseractions.MultiKeyValueAction,
             help=(
-                "Specify once per interface, in the form:\n `--interface name=<name>,mac=<mac_address>`"
+                "Specify once per interface, in the form:"
+                "`--interface key1=value1, key2=value2, ...`"
+                f"\nRequired Keys are {required_keys}"
+                f"\nOptional Keys are {optional_keys}"
             ),
             required=True,
         )
@@ -179,7 +188,7 @@ class CreateHardware(BaseParser):
             value = getattr(parsed_args, arg)
             if value:
                 body["properties"][arg] = value
-        body["properties"]["interfaces"] = self._format_iface(parsed_args.interface)
+        body["properties"]["interfaces"] = parsed_args.interface
 
         if parsed_args.dry_run:
             LOG.warn(parsed_args)
@@ -192,17 +201,6 @@ class CreateHardware(BaseParser):
                 raise ex
 
             return data
-
-    def _format_iface(self, interface_args: List):
-        interface_list = []
-        for interface in interface_args or []:
-            interface_list.append(
-                {
-                    "name": interface.get("name"),
-                    "mac_address": interface.get("mac"),
-                }
-            )
-        return interface_list
 
 
 class HardwarePatchCommand(BaseParser):
@@ -323,6 +321,7 @@ class UpdateHardware(HardwarePatchCommand):
             patch.extend(subparser(parsed_args))
 
         return patch
+
 
 class ImportHardware(BaseParser):
     def get_parser(self, prog_name):
