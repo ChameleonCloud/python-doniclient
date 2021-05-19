@@ -30,6 +30,9 @@ class OutputFormat:
 
 
 class BaseParser(command.Command):
+
+    require_hardware = False
+
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
         parser.add_argument("-d", "--dry-run", "--dry_run", action="store_true")
