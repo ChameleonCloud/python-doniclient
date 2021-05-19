@@ -32,6 +32,8 @@ class OutputFormat:
 class BaseParser(command.Command):
 
     require_hardware = False
+    iface_required_keys = ["mac_address"]
+    iface_optional_keys = ["name", "switch_info", "switch_port_id", "switch_id"]
 
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
@@ -156,18 +158,16 @@ class CreateHardware(BaseParser):
             "--ipmi_terminal_port", metavar="<ipmi_terminal_port>", type=int
         )
 
-        required_keys = ["mac_address"]
-        optional_keys = ["name", "switch_info", "switch_port_id", "switch_id"]
         parser.add_argument(
             "--interface",
-            required_keys=required_keys,
-            optional_keys=optional_keys,
+            required_keys=self.iface_required_keys,
+            optional_keys=self.iface_optional_keys,
             action=parseractions.MultiKeyValueAction,
             help=(
                 "Specify once per interface, in the form:"
                 "`--interface key1=value1, key2=value2, ...`"
-                f"\nRequired Keys are {required_keys}"
-                f"\nOptional Keys are {optional_keys}"
+                f"\nRequired Keys are {self.iface_required_keys}"
+                f"\nOptional Keys are {self.iface_optional_keys}"
             ),
             required=True,
         )
@@ -261,20 +261,31 @@ class UpdateHardware(HardwarePatchCommand):
 
         parse_iface = subparsers.add_parser("interface")
         parse_iface.set_defaults(func=self._handle_ifaces)
+
         parse_iface.add_argument(
             "--add",
-            required_keys=["name", "mac"],
+            required_keys=self.iface_required_keys,
+            optional_keys=self.iface_optional_keys,
             action=parseractions.MultiKeyValueAction,
             help=(
-                "Specify once per interface, in the form:\n `--add name=<name>,mac=<mac_address>`"
+                "Specify once per interface, in the form:"
+                "`--interface key1=value1, key2=value2, ...`"
+                f"\nRequired Keys are {self.iface_required_keys}"
+                f"\nOptional Keys are {self.iface_optional_keys}"
             ),
         )
+        update_keys = ["index"]
+        update_keys.extend(self.iface_required_keys)
         parse_iface.add_argument(
             "--update",
-            required_keys=["name", "mac", "index"],
+            required_keys=update_keys,
+            optional_keys=self.iface_optional_keys,
             action=parseractions.MultiKeyValueAction,
             help=(
-                "Specify once per interface, in the form:\n `--update name=<name>,mac=<mac_address>,index=<index>`"
+                "Specify once per interface, in the form:"
+                "`--interface key1=value1, key2=value2, ...`"
+                f"\nRequired Keys are {update_keys}"
+                f"\nOptional Keys are {self.iface_optional_keys}"
             ),
         )
         parse_iface.add_argument(
