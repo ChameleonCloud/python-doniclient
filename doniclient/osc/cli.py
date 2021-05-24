@@ -6,11 +6,13 @@ from argparse import ArgumentTypeError, FileType
 from sys import stdin
 from typing import DefaultDict, List
 
+from cliff.columns import FormattableColumn
 from dateutil import parser, tz
 from keystoneauth1.exceptions import BadRequest, HttpError, NotFound
 from osc_lib import utils
 from osc_lib.cli import parseractions
 from osc_lib.command import command
+import yaml
 
 LOG = logging.getLogger(__name__)  # Get the logger of this module
 
@@ -21,12 +23,17 @@ class DoniClientError(BaseException):
 
 class OutputFormat:
     columns = (
+        "uuid",
         "name",
         "project_id",
         "hardware_type",
         "properties",
-        "uuid",
     )
+
+
+class PropertiesColumn(FormattableColumn):
+    def human_readable(self):
+        return yaml.dump(self._value)
 
 
 class BaseParser(command.Command):
@@ -72,7 +79,10 @@ class ListHardware(command.Lister):
             raise ex
 
         data_iterator = (
-            utils.get_dict_properties(s, self.columns, formatters={}) for s in data
+            utils.get_dict_properties(
+                s, self.columns, formatters={"properties": PropertiesColumn}
+            )
+            for s in data
         )
         return (self.columns, data_iterator)
 
