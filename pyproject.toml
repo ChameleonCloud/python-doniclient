@@ -28,7 +28,7 @@ osc-lib = "<=1.14.1"
 python-openstackclient = { version = "<=4.0.2", extras = ["cli"] }
 python-dateutil = "<=2.8.0"
 PyYAML = "<=5.1.2"
-keystoneauth1 = "<=3.17.3"
+keystoneauth1 = "<4.3.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2"
