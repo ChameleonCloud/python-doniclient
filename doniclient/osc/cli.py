@@ -36,6 +36,13 @@ class PropertiesColumn(FormattableColumn):
         return yaml.dump(self._value)
 
 
+class HardwareSerializer(object):
+    def serialize_hardware(self, hw_dict: "dict", columns: "list[str]"):
+        return utils.get_dict_properties(
+            hw_dict, columns, formatters={"properties": PropertiesColumn}
+        )
+
+
 class BaseParser(command.Command):
 
     require_hardware = False
@@ -52,7 +59,7 @@ class BaseParser(command.Command):
         return parser
 
 
-class ListHardware(command.Lister):
+class ListHardware(command.Lister, HardwareSerializer):
     """List all hardware in the Doni database."""
 
     columns = OutputFormat.columns
@@ -78,16 +85,11 @@ class ListHardware(command.Lister):
             LOG.error(ex.response.text)
             raise ex
 
-        data_iterator = (
-            utils.get_dict_properties(
-                s, self.columns, formatters={"properties": PropertiesColumn}
-            )
-            for s in data
-        )
+        data_iterator = (self.serialize_hardware(s, self.columns) for s in data)
         return (self.columns, data_iterator)
 
 
-class GetHardware(BaseParser, command.ShowOne):
+class GetHardware(BaseParser, command.ShowOne, HardwareSerializer):
     """List specific hardware item in Doni."""
 
     require_hardware = True
@@ -104,7 +106,7 @@ class GetHardware(BaseParser, command.ShowOne):
 
         return (
             self.columns,
-            utils.get_dict_properties(data, self.columns, formatters={}),
+            self.serialize_hardware(data, self.columns),
         )
 
 
@@ -140,7 +142,7 @@ class SyncHardware(BaseParser):
         return result.text
 
 
-class CreateHardware(BaseParser):
+class CreateHardware(BaseParser, HardwareSerializer):
     """Create a Hardware Object in Doni."""
 
     def get_parser(self, prog_name):
@@ -210,10 +212,10 @@ class CreateHardware(BaseParser):
                 LOG.error(ex.response.text)
                 raise ex
 
-            return data
+            return self.serialize_hardware(data, OutputFormat.columns)
 
 
-class HardwarePatchCommand(BaseParser):
+class HardwarePatchCommand(BaseParser, HardwareSerializer):
     require_hardware = True
 
     def get_patch(self, parsed_args):
@@ -237,7 +239,7 @@ class HardwarePatchCommand(BaseParser):
                 LOG.error(ex.response.text)
                 raise ex
             else:
-                return res.json()
+                return self.serialize_hardware(res.json(), OutputFormat.columns)
         else:
             LOG.info("No updates to send")
 
