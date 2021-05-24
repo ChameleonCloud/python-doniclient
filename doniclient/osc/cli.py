@@ -64,9 +64,9 @@ class ListHardware(command.Lister):
         hw_client = self.app.client_manager.inventory
         try:
             if parsed_args.all:
-                data = hw_client.list()
-            else:
                 data = hw_client.export()
+            else:
+                data = hw_client.list()
         except HttpError as ex:
             LOG.error(ex.response.text)
             raise ex
