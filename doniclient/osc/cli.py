@@ -104,10 +104,19 @@ class GetHardware(BaseParser, command.ShowOne, HardwareSerializer):
             LOG.error(ex.response.text)
             raise ex
 
-        return (
-            self.columns,
-            self.serialize_hardware(data, self.columns),
-        )
+        if "workers" in data:
+            data["workers"] = "\n".join(
+                json.dumps(i, indent=4) for i in data["workers"]
+            )
+            cols = (*self.columns, "workers")
+            return (
+                cols, self.serialize_hardware(data, cols),
+            )
+        else:
+            return (
+                self.columns,
+                self.serialize_hardware(data, self.columns),
+            )
 
 
 class DeleteHardware(BaseParser):
