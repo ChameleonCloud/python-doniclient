@@ -31,7 +31,7 @@ class OutputFormat:
     )
 
 
-class PropertiesColumn(FormattableColumn):
+class YamlColumn(FormattableColumn):
     def human_readable(self):
         return yaml.dump(self._value)
 
@@ -39,7 +39,10 @@ class PropertiesColumn(FormattableColumn):
 class HardwareSerializer(object):
     def serialize_hardware(self, hw_dict: "dict", columns: "list[str]"):
         return utils.get_dict_properties(
-            hw_dict, columns, formatters={"properties": PropertiesColumn}
+            hw_dict, columns, formatters={
+                "properties": YamlColumn,
+                "workers": YamlColumn,
+            }
         )
 
 
@@ -93,7 +96,7 @@ class GetHardware(BaseParser, command.ShowOne, HardwareSerializer):
     """List specific hardware item in Doni."""
 
     require_hardware = True
-    columns = OutputFormat.columns
+    columns = (*OutputFormat.columns, "workers")
 
     def take_action(self, parsed_args):
         """List all hw items in Doni."""
@@ -104,20 +107,10 @@ class GetHardware(BaseParser, command.ShowOne, HardwareSerializer):
             LOG.error(ex.response.text)
             raise ex
 
-        if "workers" in data:
-            data["workers"] = "\n".join(
-                json.dumps(i, indent=4) for i in data["workers"]
-            )
-            cols = (*self.columns, "workers")
-            return (
-                cols,
-                self.serialize_hardware(data, cols),
-            )
-        else:
-            return (
-                self.columns,
-                self.serialize_hardware(data, self.columns),
-            )
+        return (
+            self.columns,
+            self.serialize_hardware(data, self.columns),
+        )
 
 
 class DeleteHardware(BaseParser):
