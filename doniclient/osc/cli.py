@@ -39,10 +39,12 @@ class YamlColumn(FormattableColumn):
 class HardwareSerializer(object):
     def serialize_hardware(self, hw_dict: "dict", columns: "list[str]"):
         return utils.get_dict_properties(
-            hw_dict, columns, formatters={
+            hw_dict,
+            columns,
+            formatters={
                 "properties": YamlColumn,
                 "workers": YamlColumn,
-            }
+            },
         )
 
 
