@@ -110,7 +110,8 @@ class GetHardware(BaseParser, command.ShowOne, HardwareSerializer):
             )
             cols = (*self.columns, "workers")
             return (
-                cols, self.serialize_hardware(data, cols),
+                cols,
+                self.serialize_hardware(data, cols),
             )
         else:
             return (
