@@ -7,8 +7,8 @@ from sys import stdin
 from typing import DefaultDict, List
 
 from cliff.columns import FormattableColumn
-from dateutil import parser, tz
-from keystoneauth1.exceptions import BadRequest, HttpError, NotFound
+from keystoneauth1.exceptions import Conflict, HttpError
+from keystoneauth1.exceptions.http import BadRequest
 from osc_lib import utils
 from osc_lib.cli import parseractions
 from osc_lib.command import command
@@ -358,6 +358,11 @@ class UpdateHardware(HardwarePatchCommand):
 class ImportHardware(BaseParser):
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
+        parser.add_argument(
+            "--skip_existing",
+            help="continue if an item already exists, rather than exiting",
+            action="store_true",
+        )
         parser.add_argument("-f", "--file", help="JSON input file", type=FileType("r"))
         return parser
 
@@ -370,8 +375,11 @@ class ImportHardware(BaseParser):
                 else:
                     try:
                         data = hw_client.create(item)
-                    except HttpError as ex:
+                    except Conflict as ex:
                         LOG.error(ex.response.text)
+                        if parsed_args.skip_existing:
+                            continue
+                        else:
                         raise ex
                     else:
                         LOG.debug(data)
