@@ -273,6 +273,8 @@ class UpdateHardware(HardwarePatchCommand):
         parser.add_argument(
             "--ipmi_terminal_port", metavar="<ipmi_terminal_port>", type=int
         )
+        parser.add_argument("--deploy_kernel", metavar="<deploy_kernel>")
+        parser.add_argument("--deploy_ramdisk", metavar="<deploy_ramdisk>")
 
         subparsers = parser.add_subparsers(help="Select property to update.")
 
@@ -342,6 +344,8 @@ class UpdateHardware(HardwarePatchCommand):
             "ipmi_username": "properties/ipmi_username",
             "ipmi_password": "properties/ipmi_password",
             "ipmi_terminal_port": "properties/ipmi_terminal_port",
+            "deploy_kernel": "properties/baremetal_deploy_kernel_image",
+            "deploy_ramdisk": "properties/baremetal_deploy_ramdisk_image",
         }
         for key, val in field_map.items():
             arg = getattr(parsed_args, key, None)
