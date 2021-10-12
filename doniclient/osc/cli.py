@@ -307,7 +307,6 @@ class UpdateHardware(HardwarePatchCommand):
         )
         parse_iface.add_argument(
             "--delete",
-            metavar="index",
             help=("Specify interface to delete, by index`"),
         )
 
@@ -317,16 +316,21 @@ class UpdateHardware(HardwarePatchCommand):
         # Update Interfaces
         patch = []
         for iface in getattr(parsed_args, "add") or []:
-            patch.append({"op": "add", "path": f"/interface/-", "value": iface})
+            patch.append(
+                {"op": "add", "path": f"/properties/interfaces/-", "value": iface}
+            )
 
         for iface in getattr(parsed_args, "update") or []:
             index = iface.pop("index")
             patch.append(
-                {"op": "replace", "path": f"/interface/{index}", "value": iface}
+                {
+                    "op": "replace",
+                    "path": f"/properties/interfaces/{index}",
+                    "value": iface,
+                }
             )
-        for iface in getattr(parsed_args, "delete") or []:
-            index = iface.get("index")
-            patch.append({"op": "remove", "path": f"/interface/{index}"})
+        for index in getattr(parsed_args, "delete") or []:
+            patch.append({"op": "remove", "path": f"/properties/interfaces/{index}"})
         return patch
 
     def get_patch(self, parsed_args):
