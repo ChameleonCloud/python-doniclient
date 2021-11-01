@@ -7,8 +7,8 @@ from sys import stdin
 from typing import DefaultDict, List
 
 from cliff.columns import FormattableColumn
-from dateutil import parser, tz
-from keystoneauth1.exceptions import BadRequest, HttpError, NotFound
+from keystoneauth1.exceptions import Conflict, HttpError
+from keystoneauth1.exceptions.http import BadRequest
 from osc_lib import utils
 from osc_lib.cli import parseractions
 from osc_lib.command import command
@@ -273,6 +273,8 @@ class UpdateHardware(HardwarePatchCommand):
         parser.add_argument(
             "--ipmi_terminal_port", metavar="<ipmi_terminal_port>", type=int
         )
+        parser.add_argument("--deploy_kernel", metavar="<deploy_kernel>")
+        parser.add_argument("--deploy_ramdisk", metavar="<deploy_ramdisk>")
 
         subparsers = parser.add_subparsers(help="Select property to update.")
 
@@ -307,7 +309,6 @@ class UpdateHardware(HardwarePatchCommand):
         )
         parse_iface.add_argument(
             "--delete",
-            metavar="index",
             help=("Specify interface to delete, by index`"),
         )
 
@@ -317,16 +318,21 @@ class UpdateHardware(HardwarePatchCommand):
         # Update Interfaces
         patch = []
         for iface in getattr(parsed_args, "add") or []:
-            patch.append({"op": "add", "path": f"/interface/-", "value": iface})
+            patch.append(
+                {"op": "add", "path": f"/properties/interfaces/-", "value": iface}
+            )
 
         for iface in getattr(parsed_args, "update") or []:
             index = iface.pop("index")
             patch.append(
-                {"op": "replace", "path": f"/interface/{index}", "value": iface}
+                {
+                    "op": "replace",
+                    "path": f"/properties/interfaces/{index}",
+                    "value": iface,
+                }
             )
-        for iface in getattr(parsed_args, "delete") or []:
-            index = iface.get("index")
-            patch.append({"op": "remove", "path": f"/interface/{index}"})
+        for index in getattr(parsed_args, "delete") or []:
+            patch.append({"op": "remove", "path": f"/properties/interfaces/{index}"})
         return patch
 
     def get_patch(self, parsed_args):
@@ -338,6 +344,8 @@ class UpdateHardware(HardwarePatchCommand):
             "ipmi_username": "properties/ipmi_username",
             "ipmi_password": "properties/ipmi_password",
             "ipmi_terminal_port": "properties/ipmi_terminal_port",
+            "deploy_kernel": "properties/baremetal_deploy_kernel_image",
+            "deploy_ramdisk": "properties/baremetal_deploy_ramdisk_image",
         }
         for key, val in field_map.items():
             arg = getattr(parsed_args, key, None)
@@ -354,6 +362,11 @@ class UpdateHardware(HardwarePatchCommand):
 class ImportHardware(BaseParser):
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
+        parser.add_argument(
+            "--skip_existing",
+            help="continue if an item already exists, rather than exiting",
+            action="store_true",
+        )
         parser.add_argument("-f", "--file", help="JSON input file", type=FileType("r"))
         return parser
 
@@ -366,8 +379,11 @@ class ImportHardware(BaseParser):
                 else:
                     try:
                         data = hw_client.create(item)
-                    except HttpError as ex:
+                    except Conflict as ex:
                         LOG.error(ex.response.text)
+                        if parsed_args.skip_existing:
+                            continue
+                        else:
                         raise ex
                     else:
                         LOG.debug(data)
