@@ -15,7 +15,7 @@ known_first_party = "doniclient"
 
 [tool.poetry]
 name = "doniclient"
-version = "0.3.0"
+version = "0.4.0"
 description = "This is a plugin for the openstack commandline client, to enable support for the Doni hardware inventory project"
 authors = [
     "Michael Sherman <shermanm@uchicago.edu>",
