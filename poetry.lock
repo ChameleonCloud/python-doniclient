@@ -856,7 +856,7 @@ stevedore = ">=2.0.1"
 
 [[package]]
 name = "python-openstackclient"
-version = "5.6.0"
+version = "5.7.0"
 description = "OpenStack Command-line Client"
 category = "main"
 optional = false
@@ -1485,8 +1485,8 @@ python-novaclient = [
     {file = "python_novaclient-17.6.0-py3-none-any.whl", hash = "sha256:9d2ea855171e27ba2ba36cba26e3a0a51b958dd87fc4a5666761acd9dbcb89dc"},
 ]
 python-openstackclient = [
-    {file = "python-openstackclient-5.6.0.tar.gz", hash = "sha256:0abc6666378c5a7db83ec83515a8524fb6246a919236110169cc5c216ac997ea"},
-    {file = "python_openstackclient-5.6.0-py3-none-any.whl", hash = "sha256:eb897db56787f64c54e99ae4637d876a755311822f5eec71de1e88ae2b4d82cd"},
+    {file = "python-openstackclient-5.7.0.tar.gz", hash = "sha256:c65e3d51018f193cce2daf3d0fd69daa36003bdb2b85df6b07b973e4c39e2f92"},
+    {file = "python_openstackclient-5.7.0-py3-none-any.whl", hash = "sha256:3fb0425247cd41a191cf16a8cea6eb3af26e7d9e58c3b8bea47f4d12eb11e992"},
 ]
 python-subunit = [
     {file = "python-subunit-1.4.0.tar.gz", hash = "sha256:042039928120fbf392e8c983d60f3d8ae1b88f90a9f8fd7188ddd9c26cad1e48"},
