@@ -11,17 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from argparse import ArgumentTypeError
 import logging
+from argparse import ArgumentTypeError
 from typing import TYPE_CHECKING
 
-from dateutil import parser
-from dateutil import tz
+from dateutil import parser, tz
 from keystoneauth1.exceptions import HttpError
-from osc_lib.command import command
 from osc_lib import utils
+from osc_lib.command import command
 
-from doniclient.osc.cli import HardwarePatchCommand, BaseParser
+from doniclient.osc.common import HardwarePatchCommand
 
 if TYPE_CHECKING:
     from doniclient.v1.client import Client as DoniClient
@@ -62,7 +61,9 @@ class ListHardwareAvailability(command.Lister):
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
         parser.add_argument(
-            dest="hardware_uuid", metavar="<hardware_uuid>", help=("unique ID of hardware item")
+            dest="hardware_uuid",
+            metavar="<hardware_uuid>",
+            help=("unique ID of hardware item"),
         )
         return parser
 
@@ -81,7 +82,6 @@ class ListHardwareAvailability(command.Lister):
         return (self.columns, items_iterator)
 
 
-
 class AddHardwareAvailability(HardwarePatchCommand):
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
@@ -96,7 +96,7 @@ class AddHardwareAvailability(HardwarePatchCommand):
                 "value": {
                     "start": parsed_args.start,
                     "end": parsed_args.end,
-                }
+                },
             }
         ]
 
@@ -118,11 +118,13 @@ class UpdateHardwareAvailability(HardwarePatchCommand):
         for field in ["start", "end"]:
             value = getattr(parsed_args, field)
             if value:
-                patch.append({
-                    "op": "replace",
-                    "path": f"/availability/{parsed_args.window_uuid}/{field}",
-                    "value": value
-                })
+                patch.append(
+                    {
+                        "op": "replace",
+                        "path": f"/availability/{parsed_args.window_uuid}/{field}",
+                        "value": value,
+                    }
+                )
 
         return patch
 
