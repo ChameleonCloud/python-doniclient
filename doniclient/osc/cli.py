@@ -244,7 +244,7 @@ class HardwarePatchCommand(BaseParser, HardwareSerializer):
                 LOG.error(ex.response.text)
                 raise ex
             else:
-                return self.serialize_hardware(res.json(), OutputFormat.columns)
+                return 0
         else:
             LOG.info("No updates to send")
 
