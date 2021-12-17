@@ -6,13 +6,13 @@ from argparse import ArgumentTypeError, FileType
 from sys import stdin
 from typing import DefaultDict, List
 
+import yaml
 from cliff.columns import FormattableColumn
 from keystoneauth1.exceptions import Conflict, HttpError
 from keystoneauth1.exceptions.http import BadRequest
 from osc_lib import utils
 from osc_lib.cli import parseractions
 from osc_lib.command import command
-import yaml
 
 LOG = logging.getLogger(__name__)  # Get the logger of this module
 
@@ -384,6 +384,6 @@ class ImportHardware(BaseParser):
                         if parsed_args.skip_existing:
                             continue
                         else:
-                        raise ex
+                            raise ex
                     else:
                         LOG.debug(data)
