@@ -14,13 +14,13 @@ filterwarnings = ["ignore::DeprecationWarning"]
 known_first_party = "doniclient"
 
 [tool.poetry]
-name = "doniclient"
-version = "0.4.1"
+name = "python-doniclient"
 description = "This is a plugin for the openstack commandline client, to enable support for the Doni hardware inventory project"
 authors = [
     "Michael Sherman <shermanm@uchicago.edu>",
     "Jason Anderson <jasonanderson@uchicago.edu>",
 ]
+packages = [{ include = "doniclient" }]
 
 [tool.poetry.dependencies]
 python = "^3.6.2"
