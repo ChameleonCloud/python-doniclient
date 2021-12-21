@@ -63,6 +63,8 @@ class BaseParser(command.Command):
     - serialized json string (or json file for bulk)
     """
 
+    needs_uuid = False
+
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
         parser.add_argument("-d", "--dry-run", "--dry_run", action="store_true")
@@ -72,6 +74,13 @@ class BaseParser(command.Command):
             type=json.loads,
             help="Take args as json string. Values are overridden by other args.",
         )
+        if self.needs_uuid:
+            parser.add_argument(
+                dest="uuid",
+                metavar="<uuid>",
+                help=("unique ID of hardware item"),
+            )
+
         return parser
 
     def take_action(self, parsed_args: Namespace):
@@ -88,20 +97,7 @@ class BaseParser(command.Command):
             pass
 
 
-class SingleParser(BaseParser):
-    """Base parser for commands operating on unique item."""
-
-    def get_parser(self, prog_name):
-        parser = super().get_parser(prog_name)
-        parser.add_argument(
-            dest="uuid",
-            metavar="<uuid>",
-            help=("unique ID of hardware item"),
-        )
-        return parser
-
-
-class HardwarePatchCommand(SingleParser, HardwareSerializer):
+class HardwarePatchCommand(command.Command, HardwareSerializer):
     def get_patch(self, parsed_args):
         return []
 

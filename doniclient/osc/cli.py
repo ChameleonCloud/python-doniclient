@@ -7,6 +7,7 @@ from argparse import FileType, Namespace
 
 from keystoneauth1.exceptions import Conflict, HttpError
 from keystoneauth1.exceptions.http import BadRequest
+from osc_lib import utils as oscutils
 from osc_lib.command import command
 
 from doniclient.osc.common import (
@@ -15,16 +16,16 @@ from doniclient.osc.common import (
     HardwarePatchCommand,
     HardwareSerializer,
     OutputFormat,
-    SingleParser,
 )
+from doniclient.v1 import resource_fields as res_fields
 
 LOG = logging.getLogger(__name__)  # Get the logger of this module
 
 
-class ListHardware(command.Lister, HardwareSerializer):
+class ListHardware(BaseParser, command.Lister):
     """List all hardware in the Doni database."""
 
-    columns = list(OutputFormat.columns)
+    log = logging.getLogger(__name__ + ".ListHardware")
 
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
@@ -37,27 +38,31 @@ class ListHardware(command.Lister, HardwareSerializer):
 
     def take_action(self, parsed_args):
         """List all hw items in Doni."""
+        columns = res_fields.HARDWARE_RESOURCE.fields
+        labels = res_fields.HARDWARE_RESOURCE.labels
+
         hw_client = self.app.client_manager.inventory
-        try:
-            if parsed_args.all:
-                data = hw_client.export()
-            else:
-                data = hw_client.list()
-        except HttpError as ex:
-            LOG.error(ex.response.text)
-            raise ex
+
+        if parsed_args.all:
+            data = hw_client.export()
+        else:
+            data = hw_client.list()
 
         return (
-            self.columns,
-            (self.serialize_hardware(item, self.columns) for item in data),
+            labels,
+            (
+                oscutils.get_dict_properties(
+                    s, columns, formatters={"Properties": oscutils.format_dict}
+                )
+                for s in data
+            ),
         )
 
 
-class GetHardware(SingleParser, command.ShowOne, HardwareSerializer):
+class GetHardware(BaseParser, command.ShowOne):
     """List specific hardware item in Doni."""
 
-    columns = list(OutputFormat.columns)
-    columns.append("workers")
+    needs_uuid = True
 
     def take_action(self, parsed_args):
         """List all hw items in Doni."""
@@ -68,14 +73,13 @@ class GetHardware(SingleParser, command.ShowOne, HardwareSerializer):
             LOG.error(ex.response.text)
             raise ex
 
-        return (
-            self.columns,
-            self.serialize_hardware(data, self.columns),
-        )
+        return self.dict2columns(data)
 
 
-class DeleteHardware(SingleParser):
+class DeleteHardware(BaseParser):
     """Delete specific hardware item in Doni."""
+
+    needs_uuid = True
 
     def take_action(self, parsed_args):
         hw_client = self.app.client_manager.inventory
@@ -86,8 +90,10 @@ class DeleteHardware(SingleParser):
             raise ex
 
 
-class SyncHardware(SingleParser):
+class SyncHardware(BaseParser):
     """Sync specific hardware item in Doni."""
+
+    needs_uuid = True
 
     def take_action(self, parsed_args):
         hw_client = self.app.client_manager.inventory

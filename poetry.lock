@@ -205,14 +205,6 @@ optional = false
 python-versions = ">=3.5"
 
 [[package]]
-name = "docopt"
-version = "0.6.2"
-description = "Pythonic argument parser, that will make you smile"
-category = "dev"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "dogpile.cache"
 version = "1.1.4"
 description = "A caching front-end based on the Dogpile lock."
@@ -277,6 +269,14 @@ flake8 = ">=3.0.0"
 
 [package.extras]
 dev = ["coverage", "black", "hypothesis", "hypothesmith"]
+
+[[package]]
+name = "future"
+version = "0.18.2"
+description = "Clean single-source support for Python 3 and 2"
+category = "dev"
+optional = false
+python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
 name = "idna"
@@ -774,20 +774,6 @@ pytest = ">=5.0"
 dev = ["pre-commit", "tox", "pytest-asyncio"]
 
 [[package]]
-name = "pytest-watch"
-version = "4.2.0"
-description = "Local continuous test runner with pytest and watchdog."
-category = "dev"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-colorama = ">=0.3.3"
-docopt = ">=0.4.0"
-pytest = ">=2.6.4"
-watchdog = ">=0.6.0"
-
-[[package]]
 name = "python-cinderclient"
 version = "8.1.0"
 description = "OpenStack Block Storage API Client Library"
@@ -856,7 +842,7 @@ stevedore = ">=2.0.1"
 
 [[package]]
 name = "python-openstackclient"
-version = "5.6.0"
+version = "5.7.0"
 description = "OpenStack Command-line Client"
 category = "main"
 optional = false
@@ -977,6 +963,28 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "stestr"
+version = "3.2.1"
+description = "A parallel Python test runner built around subunit"
+category = "dev"
+optional = false
+python-versions = ">=3.5"
+
+[package.dependencies]
+cliff = ">=2.8.0"
+fixtures = ">=3.0.0"
+future = "*"
+pbr = ">=2.0.0,<2.1.0 || >2.1.0,<4.0.0 || >4.0.0,<4.0.1 || >4.0.1,<4.0.2 || >4.0.2,<4.0.3 || >4.0.3"
+python-subunit = ">=1.4.0"
+PyYAML = ">=3.10.0"
+testtools = ">=2.2.0"
+voluptuous = ">=0.8.9"
+
+[package.extras]
+sql = ["subunit2sql (>=1.8.0)"]
+test = ["hacking (>=3.1.0,<3.2.0)", "sphinx (>2.1.0)", "coverage (>=4.0)", "ddt (>=1.0.1)", "doc8 (>=0.8.0)"]
+
+[[package]]
 name = "stevedore"
 version = "3.5.0"
 description = "Manage dynamic plugins for Python applications"
@@ -1050,15 +1058,12 @@ secure = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "cer
 socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 
 [[package]]
-name = "watchdog"
-version = "2.1.6"
-description = "Filesystem events monitoring"
+name = "voluptuous"
+version = "0.12.2"
+description = ""
 category = "dev"
 optional = false
-python-versions = ">=3.6"
-
-[package.extras]
-watchmedo = ["PyYAML (>=3.10)"]
+python-versions = "*"
 
 [[package]]
 name = "wcwidth"
@@ -1091,7 +1096,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "b268ad2c23344ca2140e68ed7b44fdc9acee64f6f66b8c2ca581d2c5eaae9584"
+content-hash = "99388ac8955f2eca1a1c10a22310a4b288ac522afcbb5b130a40408c2361cea5"
 
 [metadata.files]
 appdirs = [
@@ -1224,9 +1229,6 @@ decorator = [
     {file = "decorator-5.1.0-py3-none-any.whl", hash = "sha256:7b12e7c3c6ab203a29e157335e9122cb03de9ab7264b137594103fd4a683b374"},
     {file = "decorator-5.1.0.tar.gz", hash = "sha256:e59913af105b9860aa2c8d3272d9de5a56a4e608db9a2f167a8480b323d529a7"},
 ]
-docopt = [
-    {file = "docopt-0.6.2.tar.gz", hash = "sha256:49b3a825280bd66b3aa83585ef59c4a8c82f2c8a522dbe754a8bc8d08c85c491"},
-]
 "dogpile.cache" = [
     {file = "dogpile.cache-1.1.4-py3-none-any.whl", hash = "sha256:8c95bb24cd9c8e1849edc4e6099927f469438b8e9d7acf4ca14e8e001aecea81"},
     {file = "dogpile.cache-1.1.4.tar.gz", hash = "sha256:ea09bebf24bb7c028caf98963785fe9ad0bd397305849a3303bc5380d468d813"},
@@ -1246,6 +1248,9 @@ flake8 = [
 flake8-bugbear = [
     {file = "flake8-bugbear-21.9.2.tar.gz", hash = "sha256:db9a09893a6c649a197f5350755100bb1dd84f110e60cf532fdfa07e41808ab2"},
     {file = "flake8_bugbear-21.9.2-py36.py37.py38-none-any.whl", hash = "sha256:4f7eaa6f05b7d7ea4cbbde93f7bcdc5438e79320fa1ec420d860c181af38b769"},
+]
+future = [
+    {file = "future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"},
 ]
 idna = [
     {file = "idna-3.3-py3-none-any.whl", hash = "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff"},
@@ -1465,9 +1470,6 @@ pytest-mock = [
     {file = "pytest-mock-3.6.1.tar.gz", hash = "sha256:40217a058c52a63f1042f0784f62009e976ba824c418cced42e88d5f40ab0e62"},
     {file = "pytest_mock-3.6.1-py3-none-any.whl", hash = "sha256:30c2f2cc9759e76eee674b81ea28c9f0b94f8f0445a1b87762cadf774f0df7e3"},
 ]
-pytest-watch = [
-    {file = "pytest-watch-4.2.0.tar.gz", hash = "sha256:06136f03d5b361718b8d0d234042f7b2f203910d8568f63df2f866b547b3d4b9"},
-]
 python-cinderclient = [
     {file = "python-cinderclient-8.1.0.tar.gz", hash = "sha256:b57b432b2ac9161c2482a569a023211d2d3d0ada81c4da62c8f6e47f0b2bf82d"},
     {file = "python_cinderclient-8.1.0-py3-none-any.whl", hash = "sha256:5fb3243abb3c79023025e84e99cb5c929e28344b1b324de64320c006d394cb6b"},
@@ -1485,8 +1487,8 @@ python-novaclient = [
     {file = "python_novaclient-17.6.0-py3-none-any.whl", hash = "sha256:9d2ea855171e27ba2ba36cba26e3a0a51b958dd87fc4a5666761acd9dbcb89dc"},
 ]
 python-openstackclient = [
-    {file = "python-openstackclient-5.6.0.tar.gz", hash = "sha256:0abc6666378c5a7db83ec83515a8524fb6246a919236110169cc5c216ac997ea"},
-    {file = "python_openstackclient-5.6.0-py3-none-any.whl", hash = "sha256:eb897db56787f64c54e99ae4637d876a755311822f5eec71de1e88ae2b4d82cd"},
+    {file = "python-openstackclient-5.7.0.tar.gz", hash = "sha256:c65e3d51018f193cce2daf3d0fd69daa36003bdb2b85df6b07b973e4c39e2f92"},
+    {file = "python_openstackclient-5.7.0-py3-none-any.whl", hash = "sha256:3fb0425247cd41a191cf16a8cea6eb3af26e7d9e58c3b8bea47f4d12eb11e992"},
 ]
 python-subunit = [
     {file = "python-subunit-1.4.0.tar.gz", hash = "sha256:042039928120fbf392e8c983d60f3d8ae1b88f90a9f8fd7188ddd9c26cad1e48"},
@@ -1630,6 +1632,10 @@ snowballstemmer = [
     {file = "snowballstemmer-2.1.0-py2.py3-none-any.whl", hash = "sha256:b51b447bea85f9968c13b650126a888aabd4cb4463fca868ec596826325dedc2"},
     {file = "snowballstemmer-2.1.0.tar.gz", hash = "sha256:e997baa4f2e9139951b6f4c631bad912dfd3c792467e2f03d7239464af90e914"},
 ]
+stestr = [
+    {file = "stestr-3.2.1-py3-none-any.whl", hash = "sha256:de06fb51cf281ac720cdda9a73cb4e34d0cf50ffbf57166567ab37ccb2d02253"},
+    {file = "stestr-3.2.1.tar.gz", hash = "sha256:c23ee7ab441228d88365904a224fb8442da0c0289f901cf4a9422e929b7be9cd"},
+]
 stevedore = [
     {file = "stevedore-3.5.0-py3-none-any.whl", hash = "sha256:a547de73308fd7e90075bb4d301405bebf705292fa90a90fc3bcf9133f58616c"},
     {file = "stevedore-3.5.0.tar.gz", hash = "sha256:f40253887d8712eaa2bb0ea3830374416736dc8ec0e22f5a65092c1174c44335"},
@@ -1687,30 +1693,8 @@ urllib3 = [
     {file = "urllib3-1.26.7-py2.py3-none-any.whl", hash = "sha256:c4fdf4019605b6e5423637e01bc9fe4daef873709a7973e195ceba0a62bbc844"},
     {file = "urllib3-1.26.7.tar.gz", hash = "sha256:4987c65554f7a2dbf30c18fd48778ef124af6fab771a377103da0585e2336ece"},
 ]
-watchdog = [
-    {file = "watchdog-2.1.6-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:9693f35162dc6208d10b10ddf0458cc09ad70c30ba689d9206e02cd836ce28a3"},
-    {file = "watchdog-2.1.6-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:aba5c812f8ee8a3ff3be51887ca2d55fb8e268439ed44110d3846e4229eb0e8b"},
-    {file = "watchdog-2.1.6-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:4ae38bf8ba6f39d5b83f78661273216e7db5b00f08be7592062cb1fc8b8ba542"},
-    {file = "watchdog-2.1.6-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:ad6f1796e37db2223d2a3f302f586f74c72c630b48a9872c1e7ae8e92e0ab669"},
-    {file = "watchdog-2.1.6-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:922a69fa533cb0c793b483becaaa0845f655151e7256ec73630a1b2e9ebcb660"},
-    {file = "watchdog-2.1.6-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:b2fcf9402fde2672545b139694284dc3b665fd1be660d73eca6805197ef776a3"},
-    {file = "watchdog-2.1.6-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:3386b367e950a11b0568062b70cc026c6f645428a698d33d39e013aaeda4cc04"},
-    {file = "watchdog-2.1.6-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:8f1c00aa35f504197561060ca4c21d3cc079ba29cf6dd2fe61024c70160c990b"},
-    {file = "watchdog-2.1.6-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:b52b88021b9541a60531142b0a451baca08d28b74a723d0c99b13c8c8d48d604"},
-    {file = "watchdog-2.1.6-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:8047da932432aa32c515ec1447ea79ce578d0559362ca3605f8e9568f844e3c6"},
-    {file = "watchdog-2.1.6-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:e92c2d33858c8f560671b448205a268096e17870dcf60a9bb3ac7bfbafb7f5f9"},
-    {file = "watchdog-2.1.6-pp37-pypy37_pp73-macosx_10_9_x86_64.whl", hash = "sha256:b7d336912853d7b77f9b2c24eeed6a5065d0a0cc0d3b6a5a45ad6d1d05fb8cd8"},
-    {file = "watchdog-2.1.6-py3-none-manylinux2014_aarch64.whl", hash = "sha256:cca7741c0fcc765568350cb139e92b7f9f3c9a08c4f32591d18ab0a6ac9e71b6"},
-    {file = "watchdog-2.1.6-py3-none-manylinux2014_armv7l.whl", hash = "sha256:25fb5240b195d17de949588628fdf93032ebf163524ef08933db0ea1f99bd685"},
-    {file = "watchdog-2.1.6-py3-none-manylinux2014_i686.whl", hash = "sha256:be9be735f827820a06340dff2ddea1fb7234561fa5e6300a62fe7f54d40546a0"},
-    {file = "watchdog-2.1.6-py3-none-manylinux2014_ppc64.whl", hash = "sha256:d0d19fb2441947b58fbf91336638c2b9f4cc98e05e1045404d7a4cb7cddc7a65"},
-    {file = "watchdog-2.1.6-py3-none-manylinux2014_ppc64le.whl", hash = "sha256:3becdb380d8916c873ad512f1701f8a92ce79ec6978ffde92919fd18d41da7fb"},
-    {file = "watchdog-2.1.6-py3-none-manylinux2014_s390x.whl", hash = "sha256:ae67501c95606072aafa865b6ed47343ac6484472a2f95490ba151f6347acfc2"},
-    {file = "watchdog-2.1.6-py3-none-manylinux2014_x86_64.whl", hash = "sha256:e0f30db709c939cabf64a6dc5babb276e6d823fd84464ab916f9b9ba5623ca15"},
-    {file = "watchdog-2.1.6-py3-none-win32.whl", hash = "sha256:e02794ac791662a5eafc6ffeaf9bcc149035a0e48eb0a9d40a8feb4622605a3d"},
-    {file = "watchdog-2.1.6-py3-none-win_amd64.whl", hash = "sha256:bd9ba4f332cf57b2c1f698be0728c020399ef3040577cde2939f2e045b39c1e5"},
-    {file = "watchdog-2.1.6-py3-none-win_ia64.whl", hash = "sha256:a0f1c7edf116a12f7245be06120b1852275f9506a7d90227648b250755a03923"},
-    {file = "watchdog-2.1.6.tar.gz", hash = "sha256:a36e75df6c767cbf46f61a91c70b3ba71811dfa0aca4a324d9407a06a8b7a2e7"},
+voluptuous = [
+    {file = "voluptuous-0.12.2.tar.gz", hash = "sha256:4db1ac5079db9249820d49c891cb4660a6f8cae350491210abce741fabf56513"},
 ]
 wcwidth = [
     {file = "wcwidth-0.2.5-py2.py3-none-any.whl", hash = "sha256:beb4802a9cebb9144e99086eff703a642a13d6a0052920003a230f3294bbe784"},
