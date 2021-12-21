@@ -14,13 +14,22 @@ filterwarnings = ["ignore::DeprecationWarning"]
 known_first_party = "doniclient"
 
 [tool.poetry]
-name = "doniclient"
-version = "0.4.1"
+name = "python-doniclient"
+version = "0.4.2"
 description = "This is a plugin for the openstack commandline client, to enable support for the Doni hardware inventory project"
-authors = [
-    "Michael Sherman <shermanm@uchicago.edu>",
-    "Jason Anderson <jasonanderson@uchicago.edu>",
+license = "Apache-2.0"
+authors = ["Chameleon Cloud <contact@chameleoncloud.org>"]
+readme = "README.md"
+repository = "https://github.com/ChameleonCloud/python-doniclient"
+
+classifiers = [
+    "Environment :: OpenStack",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "Operating System :: POSIX :: Linux",
 ]
+
+packages = [{ include = "doniclient" }]
 
 [tool.poetry.dependencies]
 python = "^3.6.2"
