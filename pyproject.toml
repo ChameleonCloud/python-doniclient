@@ -18,10 +18,7 @@ name = "python-doniclient"
 version = "0.4.2"
 description = "This is a plugin for the openstack commandline client, to enable support for the Doni hardware inventory project"
 license = "Apache-2.0"
-authors = [
-    "Michael Sherman <shermanm@uchicago.edu>",
-    "Jason Anderson <jasonanderson@uchicago.edu>",
-]
+authors = ["Chameleon Cloud <contact@chameleoncloud.org>"]
 readme = "README.md"
 repository = "https://github.com/ChameleonCloud/python-doniclient"
 
