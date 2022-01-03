@@ -121,14 +121,6 @@ class CreateOrUpdateParser(BaseParser):
             help=("hardware_type of item"),
         )
 
-        parser.add_argument(
-            "--properties",
-            default={},
-            type=json.loads,
-            dest="properties",
-            help="specify node properties directly as json dict",
-        )
-
         properties = parser.add_argument_group("properties")
 
         properties.add_argument(
