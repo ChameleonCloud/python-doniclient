@@ -97,7 +97,7 @@ class BaseParser(command.Command):
             pass
 
 
-class HardwarePatchCommand(command.Command, HardwareSerializer):
+class HardwarePatchCommand(BaseParser, HardwareSerializer):
     def get_patch(self, parsed_args):
         return []
 
@@ -108,7 +108,7 @@ class HardwarePatchCommand(command.Command, HardwareSerializer):
         patch = self.get_patch(parsed_args)
 
         if parsed_args.dry_run:
-            LOG.info(patch)
+            LOG.warn(patch)
             return None
 
         if patch:
