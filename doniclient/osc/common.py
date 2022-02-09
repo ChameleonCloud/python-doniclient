@@ -1,7 +1,7 @@
 import argparse
 import json
 import logging
-from argparse import FileType, Namespace
+from argparse import Namespace
 
 import yaml
 from cliff.columns import FormattableColumn
@@ -39,18 +39,24 @@ class HardwareSerializer(object):
         )
 
 
-class GroupedAction(argparse.Action):
+def conditional_action(ActionClass, condition_fn):
+    class ConditionalAction(argparse.Action):
+        def __call__(self, parser, namespace, values, *args, **kwargs):
+            if condition_fn(namespace):
+                return ActionClass(parser, namespace, values, *args, **kwargs)
+
+    return ConditionalAction
+
+
+class ExpandDotNotation(argparse.Action):
     """Set property based on dest.key."""
 
     def __call__(self, parser, namespace, values, option_string=None):
         group, dest = self.dest.split(".", 2)
 
-        try:
-            group_dict = getattr(namespace, group)
-        except AttributeError:
-            group_dict = {}
-        group_dict.update({dest: values})
-        setattr(namespace, group, group_dict)
+        if not hasattr(namespace, group):
+            setattr(namespace, group, {})
+        getattr(namespace, group).update({dest: values})
 
 
 class BaseParser(command.Command):
@@ -113,7 +119,7 @@ class HardwarePatchCommand(BaseParser, HardwareSerializer):
 
         if patch:
             try:
-                LOG.debug(f"PATCH_BODY:{patch}")
+                LOG.debug(f"PATCH_BODY: {patch}")
                 res = hw_client.update(hw_uuid, patch)
             except HttpError as ex:
                 LOG.error(ex.response.text)

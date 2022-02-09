@@ -1,25 +1,26 @@
 """Implements Doni command line interface."""
 
 import argparse
+from collections import namedtuple
 import json
 import logging
 from argparse import FileType, Namespace
 
 from keystoneauth1.exceptions import Conflict, HttpError
-from keystoneauth1.exceptions.http import BadRequest
 from osc_lib import utils as oscutils
 from osc_lib.command import command
 
 from doniclient.osc.common import (
     BaseParser,
-    GroupedAction,
+    conditional_action,
+    ExpandDotNotation,
     HardwarePatchCommand,
-    HardwareSerializer,
-    OutputFormat,
 )
 from doniclient.v1 import resource_fields as res_fields
 
 LOG = logging.getLogger(__name__)  # Get the logger of this module
+
+PropertyFlag = namedtuple("PropertyFlag", ["flag", "type", "default"])
 
 
 class ListHardware(BaseParser, command.Lister):
@@ -104,10 +105,33 @@ class SyncHardware(BaseParser):
             raise ex
 
 
+def _add_prop_flag_group(parser, hardware_type, prop_flags):
+    """Register a mapping of flags for corresponding hardware properties.
+
+    Args:
+        parser (argparse.Parser): the parent parser
+        group_name (str): the name of the new argument grouping. This is just used
+            to visually group the properties in the CLI usage text.
+        prop_flags (dict): a mapping of property names to PropertyFlag objects
+            containing information about how the flag should be displayed and parsed.
+            Importantly, the property name MUST match some field on the ``properties``
+            dict on the target hardware type.
+    """
+    # Only store this flag in the resulting args if the hardware_type is in effect.
+    condition_fn = lambda args: args.hardware_type == hardware_type
+    group = parser.add_argument_group(f"{hardware_type} properties")
+    for prop_name, flag in prop_flags.items():
+        group.add_argument(
+            f"--{flag.flag}",
+            type=flag.type,
+            default=flag.default,
+            metavar=f"<{flag.flag}>",
+            dest=f"properties.{prop_name}",
+            action=conditional_action(ExpandDotNotation, condition_fn),
+        )
+
+
 class CreateOrUpdateParser(BaseParser):
-
-    needs_uuid = True
-
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
         parser.add_argument(
@@ -121,119 +145,65 @@ class CreateOrUpdateParser(BaseParser):
         parser.add_argument(
             "--hardware_type",
             default="baremetal",
-            help=("hardware_type of item"),
+            help=(
+                "Type of hardware object. Each type of hardware takes different "
+                "properties."
+            ),
         )
 
-        properties = parser.add_argument_group("properties")
-
-        properties.add_argument(
-            "--mgmt_addr",
-            metavar="<mgmt_addr>",
-            dest="properties.mgmt_addr",
-            action=GroupedAction,
-        )
-        properties.add_argument(
-            "--ipmi_username",
-            metavar="<ipmi_username>",
-            dest="properties.ipmi_username",
-            action=GroupedAction,
-        )
-        properties.add_argument(
-            "--ipmi_password",
-            metavar="<ipmi_password>",
-            dest="properties.ipmi_password",
-            action=GroupedAction,
-        )
-        properties.add_argument(
-            "--ipmi_terminal_port",
-            metavar="<ipmi_terminal_port>",
-            dest="properties.ipmi_terminal_port",
-            action=GroupedAction,
-            type=int,
-        )
-        properties.add_argument(
-            "--deploy_kernel",
-            metavar="<deploy_kernel>",
-            dest="properties.baremetal_deploy_kernel_image",
-            action=GroupedAction,
-        )
-        properties.add_argument(
-            "--deploy_ramdisk",
-            metavar="<deploy_ramdisk>",
-            dest="properties.baremetal_deploy_ramdisk_image",
-            action=GroupedAction,
-        )
-        properties.add_argument(
-            "--ironic_driver",
-            metavar="<ironic_driver>",
-            dest="properties.baremetal_driver",
-            action=GroupedAction,
-        )
-        properties.add_argument(
-            "--resource_class",
-            metavar="<resource_class>",
-            default="baremetal",
-            dest="properties.baremetal_resource_class",
-            action=GroupedAction,
-        )
-        properties.add_argument(
-            "--cpu_arch",
-            metavar="<cpu_arch>",
-            default="x86_64",
-            dest="properties.cpu_arch",
-            action=GroupedAction,
-        )
-        properties.add_argument(
-            "--blazar_node_type",
-            metavar="<blazar_node_type>",
-            dest="properties.node_type",
-            action=GroupedAction,
-        )
-        properties.add_argument(
-            "--blazar_su_factor",
-            metavar="<blazar_su_factor>",
-            dest="properties.su_factor",
-            type=float,
-            default=1.0,
-            action=GroupedAction,
-        )
-        properties.add_argument(
-            "--placement",
-            metavar="<placement>",
-            dest="properties.placement",
-            action=GroupedAction,
-            type=json.loads,
-        )
-        properties.add_argument(
-            "--capabilities",
-            metavar="<capabilities>",
-            dest="properties.baremetal_capabilities",
-            action=GroupedAction,
-            type=json.loads,
+        _add_prop_flag_group(
+            parser,
+            "baremetal",
+            {
+                "mgmt_addr": PropertyFlag("mgmt_addr", str, None),
+                "ipmi_username": PropertyFlag("ipmi_username", str, None),
+                "ipmi_password": PropertyFlag("ipmi_password", str, None),
+                "ipmi_terminal_port": PropertyFlag("ipmi_terminal_port", int, None),
+                "baremetal_deploy_kernel_image": PropertyFlag(
+                    "deploy_kernel", str, None
+                ),
+                "baremetal_deploy_ramdisk_image": PropertyFlag(
+                    "deploy_ramdisk", str, None
+                ),
+                # FIXME(jason): why is the flag named ironic_?
+                "baremetal_driver": PropertyFlag("ironic_driver", str, None),
+                "baremetal_resource_class": PropertyFlag(
+                    "resource_class", str, "baremetal"
+                ),
+                "baremetal_capabilities": PropertyFlag(
+                    "capabilities", json.loads, None
+                ),
+                "cpu_arch": PropertyFlag("cpu_arch", str, "x86_64"),
+                "node_type": PropertyFlag("blazar_node_type", str, None),
+                "su_factor": PropertyFlag("blazar_su_factor", float, 1.0),
+                "placement": PropertyFlag("placement", json.loads, None),
+                "interfaces": PropertyFlag("interfaces", json.loads, {}),
+            },
         )
 
-        properties.add_argument(
-            "--interfaces",
-            default={},
-            dest="properties.interfaces",
-            type=json.loads,
-            help="specify interfaces directly as json dict",
-            action=GroupedAction,
+        _add_prop_flag_group(
+            parser,
+            "device",
+            {
+                "machine_name": PropertyFlag("machine-name", str, None),
+                "contact_email": PropertyFlag("contact-email", str, None),
+                "channels": PropertyFlag("channels", json.loads, None),
+                "application_credential_id": PropertyFlag(
+                    "application-credential-id", str, None
+                ),
+                "application_credential_secret": PropertyFlag(
+                    "application-credential-secret", str, None
+                ),
+            },
         )
-
-        # interfaces = parser.add_argument_group("interfaces")
-
-        # interfaces.add_argument("--iface_mac")
-        # interfaces.add_argument("--iface_name")
-        # interfaces.add_argument("--switch_id")
-        # interfaces.add_argument("--switch_info")
-        # interfaces.add_argument("--switch_port_id")
 
         return parser
 
 
 class CreateHardware(CreateOrUpdateParser):
     """Create a Hardware Object in Doni."""
+
+    needs_uuid = False
 
     def get_parser(self, prog_name):
         return super().get_parser(prog_name)
@@ -265,6 +235,8 @@ class CreateHardware(CreateOrUpdateParser):
 
 class UpdateHardware(CreateOrUpdateParser, HardwarePatchCommand):
     """Update properties of existing hardware item."""
+
+    needs_uuid = True
 
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
