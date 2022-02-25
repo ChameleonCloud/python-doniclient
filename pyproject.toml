@@ -15,7 +15,7 @@ known_first_party = "doniclient"
 
 [tool.poetry]
 name = "python-doniclient"
-version = "0.4.3"
+version = "0.5.0"
 description = "This is a plugin for the openstack commandline client, to enable support for the Doni hardware inventory project"
 license = "Apache-2.0"
 authors = ["Chameleon Cloud <contact@chameleoncloud.org>"]
