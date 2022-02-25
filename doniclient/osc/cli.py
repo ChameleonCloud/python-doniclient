@@ -215,6 +215,12 @@ class CreateHardware(CreateOrUpdateParser):
 
         hw_client = self.app.client_manager.inventory
 
+        hw_type = parsed_args.hardware_type
+        # FIXME(jason): 'device.balena' is really the only device type we use.
+        # But, it's a bit awkard to have the user type this?
+        if hw_type == "device":
+            hw_type = "device.balena"
+
         body = {
             "name": parsed_args.name,
             "hardware_type": parsed_args.hardware_type,
@@ -241,7 +247,7 @@ class UpdateHardware(CreateOrUpdateParser, HardwarePatchCommand):
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
 
-        args_to_default = ("name", "hardware_type", "properties")
+        args_to_default = ("name", "properties")
         # Unset all defaults to avoid accidental changes
         for arg in parser._get_optional_actions():
             if arg.dest in args_to_default:
@@ -254,7 +260,6 @@ class UpdateHardware(CreateOrUpdateParser, HardwarePatchCommand):
 
         field_map = {
             "name": "name",
-            "hardware_type": "hardware_type",
         }
 
         for key, val in field_map.items():
