@@ -54,4 +54,4 @@ class Client(object):
         return self.adapter.post(f"/v1/hardware/{uuid}/sync")
 
     def update(self, uuid, json):
-        return self.adapter.patch(f"/v1/hardware/{uuid}/", json=json)
+        return self.adapter.patch(f"/v1/hardware/{uuid}/", json=json).json()

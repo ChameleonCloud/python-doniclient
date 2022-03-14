@@ -41,9 +41,13 @@ class HardwareSerializer(object):
 
 def conditional_action(ActionClass, condition_fn):
     class ConditionalAction(argparse.Action):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.action = ActionClass(*args, **kwargs)
+
         def __call__(self, parser, namespace, values, *args, **kwargs):
             if condition_fn(namespace):
-                return ActionClass(parser, namespace, values, *args, **kwargs)
+                return self.action(parser, namespace, values, *args, **kwargs)
 
     return ConditionalAction
 
@@ -125,6 +129,6 @@ class HardwarePatchCommand(BaseParser, HardwareSerializer):
                 LOG.error(ex.response.text)
                 raise ex
             else:
-                return self.serialize_hardware(res.json(), list(OutputFormat.columns))
+                return self.serialize_hardware(res, list(OutputFormat.columns))
         else:
             LOG.info("No updates to send")
