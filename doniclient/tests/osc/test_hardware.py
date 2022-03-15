@@ -145,9 +145,9 @@ class TestHardwareUnset(TestHardware):
         )
 
         fake_mgmt_address = "fake-mgmt_addr"
-        arglist = [FAKE_HARDWARE_UUID, "--mgmt_addr", fake_mgmt_address]
+        arglist = [FAKE_HARDWARE_UUID, "--mgmt_addr"]
         parsed_args = self.check_parser(self.cmd, arglist, [])
-        assert parsed_args.properties == {"mgmt_addr": fake_mgmt_address}
+        assert parsed_args.properties == {"mgmt_addr": True}
 
         self.cmd.take_action(parsed_args)
         self.hardware_mock.update.assert_called_with(
