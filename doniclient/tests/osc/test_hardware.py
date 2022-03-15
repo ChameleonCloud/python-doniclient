@@ -1,15 +1,15 @@
 import copy
 import json
-from unittest import mock
 import uuid
+from unittest import mock
 
 from openstackclient.tests.unit import fakes, utils
 
 from doniclient.osc import cli as hardware_cli
 from doniclient.tests.osc import fakes as hardware_fakes
 
-
 FAKE_HARDWARE_UUID = hardware_fakes.hardware_uuid
+
 
 class TestHardware(hardware_fakes.TestHardware):
     def setUp(self):
@@ -112,7 +112,9 @@ class TestHardwareSet(TestHardware):
         self.cmd = hardware_cli.UpdateHardware(self.app, None)
 
     def test_hardware_update(self):
-        self.hardware_mock.update.return_value = hardware_fakes.FakeHardware.create_one_hardware()
+        self.hardware_mock.update.return_value = (
+            hardware_fakes.FakeHardware.create_one_hardware()
+        )
 
         fake_mgmt_address = "fake-mgmt_addr"
         arglist = [FAKE_HARDWARE_UUID, "--mgmt_addr", fake_mgmt_address]
@@ -120,9 +122,39 @@ class TestHardwareSet(TestHardware):
         assert parsed_args.properties == {"mgmt_addr": fake_mgmt_address}
 
         self.cmd.take_action(parsed_args)
-        self.hardware_mock.update.assert_called_with(FAKE_HARDWARE_UUID, [{
-            "op": "add", "path": "/properties/mgmt_addr", "value": fake_mgmt_address
-        }])
+        self.hardware_mock.update.assert_called_with(
+            FAKE_HARDWARE_UUID,
+            [
+                {
+                    "op": "add",
+                    "path": "/properties/mgmt_addr",
+                    "value": fake_mgmt_address,
+                }
+            ],
+        )
+
+
+class TestHardwareUnset(TestHardware):
+    def setUp(self):
+        super().setUp()
+        self.cmd = hardware_cli.UnsetHardware(self.app, None)
+
+    def test_hardware_unset(self):
+        self.hardware_mock.update.return_value = (
+            hardware_fakes.FakeHardware.create_one_hardware()
+        )
+
+        fake_mgmt_address = "fake-mgmt_addr"
+        arglist = [FAKE_HARDWARE_UUID, "--mgmt_addr", fake_mgmt_address]
+        parsed_args = self.check_parser(self.cmd, arglist, [])
+        assert parsed_args.properties == {"mgmt_addr": fake_mgmt_address}
+
+        self.cmd.take_action(parsed_args)
+        self.hardware_mock.update.assert_called_with(
+            FAKE_HARDWARE_UUID,
+            [{"op": "remove", "path": "/properties/mgmt_addr"}],
+        )
+
 
 class TestHardwareSync(TestHardware):
     def setUp(self):
