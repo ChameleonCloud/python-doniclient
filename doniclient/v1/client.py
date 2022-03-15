@@ -32,6 +32,9 @@ class Client(object):
         except json.JSONDecodeError:
             return resp
 
+    def get(self, name_or_uuid):
+        return self.get_by_uuid(name_or_uuid)
+
     def get_availability(self, hardware_uuid: str):
         resp = self.adapter.get(f"/v1/hardware/{hardware_uuid}/availability")
         try:
