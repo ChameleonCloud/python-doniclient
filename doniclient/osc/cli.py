@@ -1,10 +1,10 @@
 """Implements Doni command line interface."""
 
 import argparse
-from collections import namedtuple
 import json
 import logging
-from argparse import FileType, Namespace
+from argparse import FileType, Namespace, _StoreTrueAction
+from collections import namedtuple
 
 from keystoneauth1.exceptions import Conflict, HttpError
 from osc_lib import utils as oscutils
@@ -12,9 +12,9 @@ from osc_lib.command import command
 
 from doniclient.osc.common import (
     BaseParser,
-    conditional_action,
     ExpandDotNotation,
     HardwarePatchCommand,
+    conditional_action,
 )
 from doniclient.v1 import resource_fields as res_fields
 
@@ -243,17 +243,7 @@ class UpdateHardware(CreateOrUpdateParser, HardwarePatchCommand):
     """Update properties of existing hardware item."""
 
     needs_uuid = True
-
-    def get_parser(self, prog_name):
-        parser = super().get_parser(prog_name)
-
-        args_to_default = ("name", "properties")
-        # Unset all defaults to avoid accidental changes
-        for arg in parser._get_optional_actions():
-            if arg.dest in args_to_default:
-                arg.default = argparse.SUPPRESS
-
-        return parser
+    op = "add"
 
     def get_patch(self, parsed_args):
         patch = []
@@ -265,11 +255,29 @@ class UpdateHardware(CreateOrUpdateParser, HardwarePatchCommand):
         for key, val in field_map.items():
             arg = getattr(parsed_args, key, None)
             if arg:
-                patch.append({"op": "add", "path": f"/{val}", "value": arg})
+                patch.append({"op": self.op, "path": f"/{val}", "value": arg})
 
         try:
             for key, val in parsed_args.properties.items():
-                patch.append({"op": "add", "path": f"/properties/{key}", "value": val})
+                patch.append(
+                    {"op": self.op, "path": f"/properties/{key}", "value": val}
+                )
+        except AttributeError:
+            pass
+
+        return patch
+
+
+class UnsetHardware(CreateOrUpdateParser, HardwarePatchCommand):
+    needs_uuid = True
+    op = "remove"
+
+    def get_patch(self, parsed_args):
+        patch = []
+
+        try:
+            for key, val in parsed_args.properties.items():
+                patch.append({"op": self.op, "path": f"/properties/{key}"})
         except AttributeError:
             pass
 
