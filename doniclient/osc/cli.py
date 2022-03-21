@@ -1,10 +1,10 @@
 """Implements Doni command line interface."""
 
 import argparse
-from collections import namedtuple
 import json
 import logging
 from argparse import FileType, Namespace
+from collections import namedtuple
 
 from keystoneauth1.exceptions import Conflict, HttpError
 from osc_lib import utils as oscutils
@@ -12,9 +12,9 @@ from osc_lib.command import command
 
 from doniclient.osc.common import (
     BaseParser,
-    conditional_action,
     ExpandDotNotation,
     HardwarePatchCommand,
+    conditional_action,
 )
 from doniclient.v1 import resource_fields as res_fields
 
@@ -69,7 +69,7 @@ class GetHardware(BaseParser, command.ShowOne):
         """List all hw items in Doni."""
         hw_client = self.app.client_manager.inventory
         try:
-            data = hw_client.get_by_uuid(parsed_args.uuid)
+            data = oscutils.find_resource(hw_client, parsed_args.uuid)
         except HttpError as ex:
             LOG.error(ex.response.text)
             raise ex
