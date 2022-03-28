@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - uses: abatilo/actions-poetry@v2.1.2
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: ${{ env.XDG_CACHE_HOME }}
           key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
