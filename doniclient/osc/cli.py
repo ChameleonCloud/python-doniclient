@@ -11,6 +11,7 @@ from osc_lib.command import command
 
 LOG = logging.getLogger(__name__)  # Get the logger of this module
 
+import doniclient.osc.common as common
 from doniclient.v1 import resource_fields as res_fields
 
 
@@ -44,7 +45,7 @@ class ListHardware(command.Lister):
                    "fetched from the server. Can not be used when '--long' "
                    "is specified."))
         return parser
-        return parser
+
 
     def take_action(self, parsed_args):
         """List all hw items in Doni."""
@@ -73,10 +74,19 @@ class ListHardware(command.Lister):
         else:
             data = client.list()
 
+        #set extra column for worker status
+        for item in data:
+            for w,s in common.get_worker_state_columns(item):
+                column_name = f"worker_{w}"
+                setattr(item,column_name,s)
+
         result_list = (oscutils.get_item_properties(
                 item=s,
                 fields=columns,
-                formatters={'Properties': oscutils.format_dict}
+                formatters={
+                    'properties': common.JsonColumn,
+                    'workers': common.JsonColumn,
+                    }
             ) for s in data)
 
         return (labels,result_list)

@@ -12,6 +12,26 @@ from osc_lib.command import command
 LOG = logging.getLogger(__name__)  # Get the logger of this module
 
 
+
+def get_worker_state_columns(data):
+
+    for w in data.workers:
+        type = w.get("worker_type")
+        state = w.get("state")
+        yield(type,state)
+
+
+
+
+class JsonColumn(FormattableColumn):
+    def human_readable(self):
+        try:
+            return json.dumps(self._value, indent=2,)
+        except Exception:
+            return None
+
+
+
 class OutputFormat:
     columns = (
         "uuid",

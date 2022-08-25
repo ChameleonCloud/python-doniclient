@@ -14,14 +14,16 @@ class Resource(object):
     """
 
     FIELDS = {
-        "name": "Name",
-        "uuid": "UUID",
-        "project_id": "Project ID",
-        "hardware_type": "Hardware Type",
-        "properties": "Properties",
         "created_at": "Created At",
+        "hardware_type": "Hardware Type",
+        "name": "Name",
+        "project_id": "Project ID",
+        "properties": "Properties",
         "updated_at": "Updated At",
+        "uuid": "UUID",
         "workers": "Workers",
+        "worker_blazar.physical_host": "Blazar Host Worker",
+        "worker_ironic": "Ironic Worker",
     }
 
     def __init__(self, field_ids, sort_excluded=None, override_labels=None):
@@ -50,24 +52,31 @@ class Resource(object):
     def labels(self):
         return self._labels
 
-
+# Defines default output columns and order
 HARDWARE_RESOURCE = Resource(
-    [
-        "uuid",
-        "name",
-        "properties",
-    ]
-)
-
-
-HARDWARE_DETAILED_RESOURCE = Resource(
     [
         "uuid",
         "name",
         "project_id",
         "hardware_type",
+        "worker_blazar.physical_host",
+        "worker_ironic",
+    ]
+)
+
+# Defines default output columns and order when using --long
+# also defines allowed columns for --fields argument
+HARDWARE_DETAILED_RESOURCE = Resource(
+    [
+        "uuid",
+        "name",
         "created_at",
         "updated_at",
+        "project_id",
+        "hardware_type",
         "properties",
+        "worker_blazar.physical_host",
+        "worker_ironic",
+        "workers",
     ]
 )
