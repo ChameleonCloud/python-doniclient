@@ -5,7 +5,7 @@ class Resource(object):
     """Resource class.
 
     This class is used to manage the various fields that a resource (e.g.
-    Chassis, Node, Port) contains.  An individual field consists of a
+    Hardware, Device, etc) contains.  An individual field consists of a
     'field_id' (key) and a 'label' (value).  The caller only provides the
     'field_ids' when instantiating the object.
     Ordering of the 'field_ids' will be preserved as specified by the caller.

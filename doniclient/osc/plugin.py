@@ -14,7 +14,7 @@ API_VERSION_OPTION = "os_inventory_api_version"
 
 # Maps api version from service catalog to class path
 API_VERSIONS = {
-    "1": "doniclient.v1.client.Client",
+    "1": "doniclient.v1.hardware.HardwareClient",
 }
 # Required by the OSC plugin interface
 def make_client(instance):
@@ -34,11 +34,14 @@ def make_client(instance):
 
     LOG.debug("Instantiating inventory client: %s", inventory_client)
 
-    ksa_adapter = adapter.Adapter(
-        session=instance.session, service_type="inventory", interface="public"
-    )
 
-    client = inventory_client(adapter=ksa_adapter)
+    inventory_endpoint = instance.get_endpoint_for_service_type(
+        service_type=API_NAME)
+
+    client = inventory_client(
+        session=instance.session,
+        endpoint=inventory_endpoint,
+        service_type=API_NAME )
 
     return client
 
