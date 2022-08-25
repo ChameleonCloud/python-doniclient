@@ -15,7 +15,7 @@ known_first_party = "doniclient"
 
 [tool.poetry]
 name = "python-doniclient"
-version = "1.0.0"
+version = "1.0.1"
 description = "This is a plugin for the openstack commandline client, to enable support for the Doni hardware inventory project"
 license = "Apache-2.0"
 authors = ["Chameleon Cloud <contact@chameleoncloud.org>"]
@@ -32,18 +32,18 @@ classifiers = [
 packages = [{ include = "doniclient" }]
 
 [tool.poetry.dependencies]
-python = "^3.6.2"
+python = "^3.7"
 osc-lib = "<=2.4.2"
 python-openstackclient = { version = "<=5.6.0", extras = ["cli"] }
 python-dateutil = "<=2.8.2"
 PyYAML = "<=5.4.1"
-keystoneauth1 = ">=4.4.0"
+keystoneauth1 = "<=4.4.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2"
 black = { version = "^21", allow-prereleases = true }
 flake8 = "^3.9.0"
-flake8-bugbear = "^21.4.1"
+flake8-bugbear = "^22.8.23"
 pytest-mock = "^3.5.1"
 isort = "^5.8.0"
 pydocstyle = "^6.0.0"
