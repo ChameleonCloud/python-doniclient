@@ -40,7 +40,7 @@ PyYAML = "<=5.4.1"
 keystoneauth1 = "<=4.4.0"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.2"
+pytest = "^7.1"
 black = { version = "^21", allow-prereleases = true }
 flake8 = "^3.9.0"
 flake8-bugbear = "^21.4.1"
