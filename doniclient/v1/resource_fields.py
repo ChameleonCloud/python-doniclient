@@ -69,5 +69,6 @@ HARDWARE_DETAILED_RESOURCE = Resource(
         "created_at",
         "updated_at",
         "properties",
+        "workers",
     ]
 )

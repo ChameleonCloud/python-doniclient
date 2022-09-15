@@ -13,11 +13,7 @@
             "args": [
                 "hardware",
                 "list",
-                "--fields",
-                "uuid",
-                "name",
-                "worker_blazar.physical_host",
-                "worker_ironic"
+                "--long"
             ],
             "justMyCode": false,
             "envFile": "${workspaceFolder}/debug.env",
