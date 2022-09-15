@@ -96,3 +96,19 @@ class ListHardware(command.Lister):
         return (labels,result_list)
 
 
+class SyncHardware(command.Command):
+    """Sync specific hardware item in Doni."""
+
+    def get_parser(self, prog_name):
+        parser =  super().get_parser(prog_name)
+        parser.add_argument("uuid")
+        return parser
+
+    def take_action(self, parsed_args):
+        hw_client = self.app.client_manager.inventory
+        result = hw_client.sync(parsed_args.uuid)
+        return result
+        # try:
+        # except ksa_ex.HttpError as ex:
+        #     LOG.error(ex.response.text)
+        #     raise ex

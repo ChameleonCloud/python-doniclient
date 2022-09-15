@@ -1,5 +1,5 @@
+import json
 import logging
-from collections import namedtuple
 
 from osc_lib.api import api
 
@@ -22,5 +22,11 @@ class HardwareClient(api.BaseAPI):
         hw_list = ret.get("hardware")
         obj_list = [Hardware(manager=base.Manager,info=h) for h in hw_list]
         return obj_list
+
+    def sync(self, uuid):
+        path = f"/v1/hardware/{uuid}/sync"
+        ret = super()._request(method="POST",url=path)
+        return ret
+
 
 
