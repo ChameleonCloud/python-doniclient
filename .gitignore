@@ -131,3 +131,4 @@ clouds.yaml
 
 
 **/.stestr
+debug.env

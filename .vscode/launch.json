@@ -1,0 +1,26 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Hardware List",
+            "type": "python",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": ".venv/bin/openstack",
+            "args": [
+                "hardware",
+                "list",
+                "--fields",
+                "uuid",
+                "name",
+                "worker_blazar.physical_host",
+                "worker_ironic"
+            ],
+            "justMyCode": false,
+            "envFile": "${workspaceFolder}/debug.env",
+        },
+    ]
+}
