@@ -35,14 +35,22 @@ class ListHardware(BaseParser, command.Lister):
             help="List hardware from all owners. Requires admin rights.",
             action="store_true",
         )
+        parser.add_argument(
+            "--long",
+            help="Include all columns.",
+            action="store_true",
+        )
         return parser
 
     def take_action(self, parsed_args):
         """List all hw items in Doni."""
+        hw_client = self.app.client_manager.inventory
         columns = res_fields.HARDWARE_RESOURCE.fields
         labels = res_fields.HARDWARE_RESOURCE.labels
 
-        hw_client = self.app.client_manager.inventory
+        if parsed_args.long:
+            columns = res_fields.HARDWARE_DETAILED_RESOURCE.fields
+            labels = res_fields.HARDWARE_DETAILED_RESOURCE.labels
 
         if parsed_args.all:
             data = hw_client.export()
