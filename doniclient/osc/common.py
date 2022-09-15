@@ -18,7 +18,8 @@ def get_worker_state_columns(data):
     for w in data.workers:
         type = w.get("worker_type")
         state = w.get("state")
-        yield(type,state)
+        detail = w.get("state_details")
+        yield(type,state,detail)
 
 
 

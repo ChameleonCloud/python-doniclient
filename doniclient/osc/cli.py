@@ -5,7 +5,9 @@ import argparse
 import itertools
 import json
 import logging
+from urllib import response
 
+import keystoneauth1.exceptions as ksa_ex
 from osc_lib import utils as oscutils
 from osc_lib.command import command
 
@@ -76,9 +78,11 @@ class ListHardware(command.Lister):
 
         #set extra column for worker status
         for item in data:
-            for w,s in common.get_worker_state_columns(item):
-                column_name = f"worker_{w}"
-                setattr(item,column_name,s)
+            for worker,state,detail in common.get_worker_state_columns(item):
+                state_column_name = f"worker_{worker}"
+                detail_column_name = f"worker_{worker}_detail"
+                setattr(item,state_column_name,state)
+                setattr(item,detail_column_name,detail)
 
         result_list = (oscutils.get_item_properties(
                 item=s,
