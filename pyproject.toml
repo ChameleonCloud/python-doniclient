@@ -69,3 +69,7 @@ hardware_availability_list = "doniclient.osc.availability:ListHardwareAvailabili
 hardware_availability_set = "doniclient.osc.availability:UpdateHardwareAvailability"
 hardware_availability_add = "doniclient.osc.availability:AddHardwareAvailability"
 hardware_availability_remove = "doniclient.osc.availability:RemoveHardwareAvailability"
+
+
+hardware_device_create = "doniclient.osc.device:CreateDevice"
+hardware_device_set = "doniclient.osc.device:UpdateDevice"

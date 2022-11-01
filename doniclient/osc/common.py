@@ -1,7 +1,7 @@
 import argparse
 import json
 import logging
-from argparse import Namespace
+from argparse import ArgumentParser, Namespace
 
 import yaml
 from cliff.columns import FormattableColumn
@@ -75,7 +75,7 @@ class BaseParser(command.Command):
 
     needs_uuid = False
 
-    def get_parser(self, prog_name):
+    def get_parser(self, prog_name) -> ArgumentParser:
         parser = super().get_parser(prog_name)
         parser.add_argument("-d", "--dry-run", "--dry_run", action="store_true")
         parser.add_argument(
@@ -96,6 +96,8 @@ class BaseParser(command.Command):
     def take_action(self, parsed_args: Namespace):
         """This allows setting arbitrary args via json input."""
 
+        super().take_action(parsed_args)
+
         # Get dict of args without json string
         args_dict = vars(parsed_args)
         try:
@@ -107,7 +109,7 @@ class BaseParser(command.Command):
             pass
 
 
-class HardwarePatchCommand(BaseParser, HardwareSerializer):
+class HardwarePatchCommand(HardwareSerializer):
     def get_patch(self, parsed_args):
         return []
 

@@ -10,12 +10,8 @@ from keystoneauth1.exceptions import Conflict, HttpError
 from osc_lib import utils as oscutils
 from osc_lib.command import command
 
-from doniclient.osc.common import (
-    BaseParser,
-    ExpandDotNotation,
-    HardwarePatchCommand,
-    conditional_action,
-)
+from doniclient.osc.common import (BaseParser, ExpandDotNotation,
+                                   HardwarePatchCommand, conditional_action)
 from doniclient.v1 import resource_fields as res_fields
 
 LOG = logging.getLogger(__name__)  # Get the logger of this module
@@ -202,6 +198,7 @@ class CreateOrUpdateParser(BaseParser):
                 "application_credential_secret": PropertyFlag(
                     "application-credential-secret", str, None
                 ),
+                "local_egress": PropertyFlag("local-egress", str, None),
             },
         )
 
@@ -255,15 +252,20 @@ class UpdateHardware(CreateOrUpdateParser, HardwarePatchCommand):
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
 
-        args_to_default = ("name", "properties")
+        # args_to_default = ("name", "properties")
         # Unset all defaults to avoid accidental changes
-        for arg in parser._get_optional_actions():
-            if arg.dest in args_to_default:
-                arg.default = argparse.SUPPRESS
+        # for arg in parser._get_optional_actions():
+        #     if arg.dest in args_to_default:
+        #         arg.default = argparse.SUPPRESS
 
         return parser
 
+    def take_action(self, parsed_args: Namespace):
+        return super().take_action(parsed_args)
+
     def get_patch(self, parsed_args):
+        patch = super().get_patch(parsed_args)
+
         patch = []
 
         field_map = {

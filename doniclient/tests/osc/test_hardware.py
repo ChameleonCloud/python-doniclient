@@ -3,6 +3,13 @@ from doniclient.tests.osc import fakes as hardware_fakes
 
 FAKE_HARDWARE_UUID = hardware_fakes.hardware_uuid
 
+
+UPDATE_PARAMS = [
+        ("--mgmt_addr","mgmt_addr","/properties/mgmt_addr","fake-mgmt_addr"),
+        ("--local-egress","local_egress","/properties/local_egress","allow"),
+        ("--machine-name","machine_name","/properties/machine_name","jetson-nano"),
+    ]
+
 class TestHardware(hardware_fakes.TestHardware):
     def setUp(self):
         super(TestHardware, self).setUp()
@@ -100,12 +107,9 @@ class TestHardwareDelete(TestHardware):
 
 
 
-update_params = [
-        ("--mgmt_addr","mgmt_addr","/properties/mgmt_addr","fake-mgmt_addr"),
-        ("--local-egress","local_egress","/properties/local_egress","allow"),
-    ]
 
-class TestHardwareSetSequenceMeta(type):
+
+class TestHardwareSetMeta(type):
     def __new__(mcs, name, bases, dict):
         def gen_test(arg,prop,path,value):
             def test(self):
@@ -120,14 +124,14 @@ class TestHardwareSetSequenceMeta(type):
                 }])
             return test
 
-        for arg,prop,path,value in update_params:
+        for arg,prop,path,value in UPDATE_PARAMS:
             test_name = "test_hardware_update_%s" % prop
             dict[test_name] = gen_test(arg,prop,path,value)
         return type.__new__(mcs, name, bases, dict)
 
 
 
-class TestHardwareSetSequence(TestHardware, metaclass=TestHardwareSetSequenceMeta):
+class TestHardwareSet(TestHardware, metaclass=TestHardwareSetMeta):
     def setUp(self):
         super().setUp()
         self.cmd = hardware_cli.UpdateHardware(self.app, None)

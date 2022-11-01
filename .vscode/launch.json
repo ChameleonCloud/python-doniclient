@@ -15,7 +15,22 @@
                 "list",
                 "--long"
             ],
-            "justMyCode": false,
+            "envFile": "${workspaceFolder}/debug.env",
+        },
+        {
+            "name": "Hardware set",
+            "type": "python",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": ".venv/bin/openstack",
+            "args": [
+                "hardware",
+                "set",
+                "--local-egress",
+                "allow",
+                "--debug",
+                "452aa267-99e1-46bf-af89-7c3e71a03478"
+            ],
             "envFile": "${workspaceFolder}/debug.env",
         },
     ]
