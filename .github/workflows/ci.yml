@@ -12,17 +12,24 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - uses: abatilo/actions-poetry@v2.1.2
-      - uses: actions/cache@v2
+      - uses: abatilo/actions-poetry@v2
+      - uses: actions/cache@v3
         with:
           path: ${{ env.XDG_CACHE_HOME }}
           key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-poetry-
             ${{ runner.os }}-
-      - run: poetry install
-      - run: poetry build
+      - name: Install Dependencies
+        run: poetry install
+      - name: Run tests
+        run: poetry run pytest --junitxml=pytest.xml
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          junit_files: "pytest.xml"
