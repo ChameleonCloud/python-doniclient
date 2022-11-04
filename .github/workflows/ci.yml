@@ -27,4 +27,9 @@ jobs:
       - name: Install Dependencies
         run: poetry install
       - name: Run tests
-        run: poetry run stestr run
+        run: poetry run pytest --junitxml=pytest.xml
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          junit_files: "pytest.xml"
