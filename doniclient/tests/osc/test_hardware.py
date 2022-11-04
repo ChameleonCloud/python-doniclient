@@ -1,15 +1,32 @@
-import copy
-import json
-from unittest import mock
-import uuid
-
-from openstackclient.tests.unit import fakes, utils
-
 from doniclient.osc import cli as hardware_cli
 from doniclient.tests.osc import fakes as hardware_fakes
 
-
 FAKE_HARDWARE_UUID = hardware_fakes.hardware_uuid
+
+UPDATE_PARAMS = [
+    (
+        "baremetal",
+        "--mgmt_addr",
+        "mgmt_addr",
+        "/properties/mgmt_addr",
+        "fake-mgmt_addr",
+    ),
+    (
+        "device",
+        "--machine-name",
+        "machine_name",
+        "/properties/machine_name",
+        "jetson-nano",
+    ),
+    (
+        "device",
+        "--contact-email",
+        "contact_email",
+        "/properties/contact_email",
+        "test@foo.bar",
+    ),
+]
+
 
 class TestHardware(hardware_fakes.TestHardware):
     def setUp(self):
@@ -106,23 +123,43 @@ class TestHardwareDelete(TestHardware):
         self.cmd = hardware_cli.DeleteHardware(self.app, None)
 
 
-class TestHardwareSet(TestHardware):
+class TestHardwareSetMeta(type):
+    """Metaclass to generate list of test cases."""
+
+    def __new__(mcs, name, bases, dict):
+        def gen_test(hw_type, arg, prop, path, value):
+            def test(self):
+                self.hardware_mock.update.return_value = (
+                    hardware_fakes.FakeHardware.create_one_hardware()
+                )
+                arglist = [
+                    FAKE_HARDWARE_UUID,
+                    "--hardware_type",
+                    hw_type,
+                    arg,
+                    value,
+                ]
+                parsed_args = self.check_parser(self.cmd, arglist, [])
+                assert parsed_args.properties == {prop: value}
+
+                self.cmd.take_action(parsed_args)
+                self.hardware_mock.update.assert_called_with(
+                    FAKE_HARDWARE_UUID, [{"op": "add", "path": path, "value": value}]
+                )
+
+            return test
+
+        for hw_type, arg, prop, path, value in UPDATE_PARAMS:
+            test_name = "test_device_update_%s" % prop
+            dict[test_name] = gen_test(hw_type, arg, prop, path, value)
+        return type.__new__(mcs, name, bases, dict)
+
+
+class TestHardwareSet(TestHardware, metaclass=TestHardwareSetMeta):
     def setUp(self):
         super().setUp()
         self.cmd = hardware_cli.UpdateHardware(self.app, None)
 
-    def test_hardware_update(self):
-        self.hardware_mock.update.return_value = hardware_fakes.FakeHardware.create_one_hardware()
-
-        fake_mgmt_address = "fake-mgmt_addr"
-        arglist = [FAKE_HARDWARE_UUID, "--mgmt_addr", fake_mgmt_address]
-        parsed_args = self.check_parser(self.cmd, arglist, [])
-        assert parsed_args.properties == {"mgmt_addr": fake_mgmt_address}
-
-        self.cmd.take_action(parsed_args)
-        self.hardware_mock.update.assert_called_with(FAKE_HARDWARE_UUID, [{
-            "op": "add", "path": "/properties/mgmt_addr", "value": fake_mgmt_address
-        }])
 
 class TestHardwareSync(TestHardware):
     def setUp(self):
