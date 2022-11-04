@@ -202,6 +202,7 @@ class CreateOrUpdateParser(BaseParser):
                 "application_credential_secret": PropertyFlag(
                     "application-credential-secret", str, None
                 ),
+                "local_egress": PropertyFlag("local-egress", str, None),
             },
         )
 
