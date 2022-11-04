@@ -25,6 +25,7 @@ UPDATE_PARAMS = [
         "/properties/contact_email",
         "test@foo.bar",
     ),
+    ("device", "--local-egress", "local_egress", "/properties/local_egress", "allow"),
 ]
 
 
