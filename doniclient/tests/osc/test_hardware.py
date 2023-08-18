@@ -2,6 +2,7 @@ from doniclient.osc import cli as hardware_cli
 from doniclient.tests.osc import fakes as hardware_fakes
 
 FAKE_HARDWARE_UUID = hardware_fakes.hardware_uuid
+FAKE_HARDWARE_NAME = hardware_fakes.hardware_name
 
 UPDATE_PARAMS = [
     (
@@ -10,6 +11,7 @@ UPDATE_PARAMS = [
         "management_address",
         "/properties/management_address",
         "fake-mgmt_addr",
+        True,
     ),
     (
         "device",
@@ -17,6 +19,7 @@ UPDATE_PARAMS = [
         "machine_name",
         "/properties/machine_name",
         "jetson-nano",
+        False,
     ),
     (
         "device",
@@ -24,8 +27,9 @@ UPDATE_PARAMS = [
         "contact_email",
         "/properties/contact_email",
         "test@foo.bar",
+        True,
     ),
-    ("device", "--local-egress", "local_egress", "/properties/local_egress", "allow"),
+    ("device", "--local-egress", "local_egress", "/properties/local_egress", "allow", False),
 ]
 
 
@@ -132,13 +136,16 @@ class TestHardwareSetMeta(type):
     """Metaclass to generate list of test cases."""
 
     def __new__(mcs, name, bases, dict):
-        def gen_test(hw_type, arg, prop, path, value):
+        def gen_test(hw_type, arg, prop, path, value, use_name=False):
             def test(self):
                 self.hardware_mock.update.return_value = (
                     hardware_fakes.FakeHardware.create_one_hardware()
                 )
+                name_or_id = FAKE_HARDWARE_UUID
+                if use_name:
+                    name_or_id = FAKE_HARDWARE_NAME
                 arglist = [
-                    FAKE_HARDWARE_UUID,
+                    name_or_id,
                     "--hardware_type",
                     hw_type,
                     arg,
@@ -149,14 +156,14 @@ class TestHardwareSetMeta(type):
 
                 self.cmd.take_action(parsed_args)
                 self.hardware_mock.update.assert_called_with(
-                    FAKE_HARDWARE_UUID, [{"op": "add", "path": path, "value": value}]
+                    name_or_id, [{"op": "add", "path": path, "value": value}]
                 )
 
             return test
 
-        for hw_type, arg, prop, path, value in UPDATE_PARAMS:
+        for hw_type, arg, prop, path, value, use_name in UPDATE_PARAMS:
             test_name = "test_device_update_%s" % prop
-            dict[test_name] = gen_test(hw_type, arg, prop, path, value)
+            dict[test_name] = gen_test(hw_type, arg, prop, path, value, use_name=use_name)
         return type.__new__(mcs, name, bases, dict)
 
 
