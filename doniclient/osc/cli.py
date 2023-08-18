@@ -221,7 +221,7 @@ class CreateHardware(CreateOrUpdateParser):
         """Create new HW item."""
         # Call superclass action to parse input json
         super().take_action(parsed_args)
-
+    
         hw_client = self.app.client_manager.inventory
 
         hw_type = parsed_args.hardware_type

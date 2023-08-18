@@ -50,11 +50,29 @@ class Client(object):
         except json.JSONDecodeError:
             return resp
 
-    def delete(self, uuid):
-        return self.adapter.delete(f"/v1/hardware/{uuid}/")
+    def delete(self, name_or_uuid):
+        hardware_list = self.list()
+        matching_hardware = [h for h in hardware_list if h['name'] == name_or_uuid]
+
+        if matching_hardware:
+            hardware_uuid = matching_hardware[0]['uuid']
+            return self.adapter.delete(f"/v1/hardware/{hardware_uuid}/")
+        else:
+            raise ValueError("Hardware not found")
 
     def sync(self, uuid):
         return self.adapter.post(f"/v1/hardware/{uuid}/sync")
 
-    def update(self, uuid, json):
-        return self.adapter.patch(f"/v1/hardware/{uuid}/", json=json).json()
+    def update(self, name_or_uuid, json):
+        hardware_list = self.list()
+        matching_hardware = [h for h in hardware_list if h['name'] == name_or_uuid]
+
+        if matching_hardware:
+            hardware_uuid = matching_hardware[0]['uuid']
+            resp = self.adapter.patch(f"/v1/hardware/{hardware_uuid}/", json=json)
+            try:
+                return resp.json()
+            except json.JSONDecodeError:
+                return resp
+        else:
+            raise ValueError("Hardware not found")
