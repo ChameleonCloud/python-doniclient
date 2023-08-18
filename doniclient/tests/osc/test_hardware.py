@@ -42,6 +42,10 @@ class TestHardwareShow(TestHardware):
     def setUp(self):
         super().setUp()
 
+        self.hardware_mock.get.return_value = (
+            hardware_fakes.FakeHardware.create_one_hardware()
+        )
+
         self.hardware_mock.get_by_uuid.return_value = (
             hardware_fakes.FakeHardware.create_one_hardware()
         )
@@ -60,7 +64,7 @@ class TestHardwareShow(TestHardware):
         # Set expected values
         args = [FAKE_HARDWARE_UUID]
 
-        self.hardware_mock.get_by_uuid.assert_called_with(*args)
+        self.hardware_mock.get.assert_called_with(*args)
 
         collist = (
             "created_at",
