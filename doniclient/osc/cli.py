@@ -163,7 +163,7 @@ class CreateOrUpdateParser(BaseParser):
             parser,
             "baremetal",
             {
-                "mgmt_addr": PropertyFlag("mgmt_addr", str, None),
+                "management_address": PropertyFlag("management_address", str, None),
                 "ipmi_username": PropertyFlag("ipmi_username", str, None),
                 "ipmi_password": PropertyFlag("ipmi_password", str, None),
                 "ipmi_terminal_port": PropertyFlag("ipmi_terminal_port", int, None),
