@@ -56,7 +56,6 @@ class ListHardware(BaseParser, command.Lister):
             data = hw_client.export()
         else:
             data = hw_client.list()
-
         return (
             labels,
             (
@@ -93,7 +92,13 @@ class DeleteHardware(BaseParser):
     def take_action(self, parsed_args):
         hw_client = self.app.client_manager.inventory
         try:
-            hw_client.delete(parsed_args.uuid)
+            data = oscutils.find_resource(hw_client, parsed_args.uuid)
+        except HttpError as ex:
+            LOG.error(ex.response.text)
+            raise ex
+        uuid = data["uuid"]
+        try:
+            hw_client.delete(uuid)
         except HttpError as ex:
             LOG.error(ex.response.text)
             raise ex
@@ -221,7 +226,7 @@ class CreateHardware(CreateOrUpdateParser):
         """Create new HW item."""
         # Call superclass action to parse input json
         super().take_action(parsed_args)
-
+    
         hw_client = self.app.client_manager.inventory
 
         hw_type = parsed_args.hardware_type
@@ -283,6 +288,21 @@ class UpdateHardware(CreateOrUpdateParser, HardwarePatchCommand):
             pass
 
         return patch
+    
+    def take_action(self, parsed_args):
+        hw_client = self.app.client_manager.inventory
+        try:
+            data = oscutils.find_resource(hw_client, parsed_args.uuid)
+        except HttpError as ex:
+            LOG.error(ex.response.text)
+            raise ex
+        uuid = data["uuid"]
+        patch = self.get_patch(parsed_args)
+        try:
+            hw_client.update(uuid, patch)
+        except HttpError as ex:
+            LOG.error(ex.response.text)
+            raise ex
 
 
 class ImportHardware(BaseParser):
