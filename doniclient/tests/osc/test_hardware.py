@@ -6,9 +6,9 @@ FAKE_HARDWARE_UUID = hardware_fakes.hardware_uuid
 UPDATE_PARAMS = [
     (
         "baremetal",
-        "--mgmt_addr",
-        "mgmt_addr",
-        "/properties/mgmt_addr",
+        "--management_address",
+        "management_address",
+        "/properties/management_address",
         "fake-mgmt_addr",
     ),
     (
