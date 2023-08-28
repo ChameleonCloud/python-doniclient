@@ -1,6 +1,8 @@
 from doniclient.osc import cli as hardware_cli
 from doniclient.tests.osc import fakes as hardware_fakes
-
+from osc_lib import utils as oscutils
+from osc_lib import exceptions
+import unittest
 FAKE_HARDWARE_UUID = hardware_fakes.hardware_uuid
 FAKE_HARDWARE_NAME = hardware_fakes.hardware_name
 
@@ -130,6 +132,50 @@ class TestHardwareDelete(TestHardware):
     def setUp(self):
         super().setUp()
         self.cmd = hardware_cli.DeleteHardware(self.app, None)
+    
+    def test_hardware_delete_w_same_name(self):
+        # When delete when more than two resources exist with same name
+        arglist = [FAKE_HARDWARE_NAME]
+        verifylist = []
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+        # get will throw an Exception when used with name
+        self.hardware_mock.get.side_effect = Exception
+        self.hardware_mock.find.side_effect = Exception
+        # return two hardwares with same name
+        self.hardware_mock.list.return_value = [
+            hardware_fakes.FakeHardware.create_one_hardware(),
+            hardware_fakes.FakeHardware.create_one_hardware()
+        ]
+        try:
+            self.cmd.take_action(parsed_args)
+        except exceptions.CommandError as e:
+            self.assertEqual(e.args[0], f"More than one resource exists with the name or ID '{FAKE_HARDWARE_NAME}'.")
+    
+    def test_hardware_delete_w_name(self):
+        arglist = [FAKE_HARDWARE_NAME]
+        verifylist = []
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+        # get will throw an Exception when used with name
+        self.hardware_mock.get.side_effect = Exception
+        self.hardware_mock.find.side_effect = Exception
+        # return two hardwares with same name
+        self.hardware_mock.list.return_value = [
+            hardware_fakes.FakeHardware.create_one_hardware()
+        ]
+        self.cmd.take_action(parsed_args)
+        
+        
+    def test_hardware_delete_w_uuid(self):
+        arglist = [FAKE_HARDWARE_UUID]
+        verifylist = []
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+        self.hardware_mock.get.return_value = (
+                    hardware_fakes.FakeHardware.create_one_hardware()
+                )
+        self.cmd.take_action(parsed_args)
+        self.hardware_mock.delete.assert_called_with(
+            FAKE_HARDWARE_UUID
+        )
 
 
 class TestHardwareSetMeta(type):
@@ -138,12 +184,21 @@ class TestHardwareSetMeta(type):
     def __new__(mcs, name, bases, dict):
         def gen_test(hw_type, arg, prop, path, value, use_name=False):
             def test(self):
+                
+                name_or_id = FAKE_HARDWARE_UUID
+                self.hardware_mock.get.return_value = (
+                    hardware_fakes.FakeHardware.create_one_hardware()
+                )
                 self.hardware_mock.update.return_value = (
                     hardware_fakes.FakeHardware.create_one_hardware()
                 )
-                name_or_id = FAKE_HARDWARE_UUID
                 if use_name:
                     name_or_id = FAKE_HARDWARE_NAME
+                    self.hardware_mock.get.side_effect = Exception
+                    self.hardware_mock.find.side_effect = Exception
+                    self.hardware_mock.list.return_value = [
+                        hardware_fakes.FakeHardware.create_one_hardware()
+                    ]
                 arglist = [
                     name_or_id,
                     "--hardware_type",
@@ -155,8 +210,10 @@ class TestHardwareSetMeta(type):
                 assert parsed_args.properties == {prop: value}
 
                 self.cmd.take_action(parsed_args)
+                # test if the get is called with name
+                self.hardware_mock.get.assert_called_with(name_or_id)
                 self.hardware_mock.update.assert_called_with(
-                    name_or_id, [{"op": "add", "path": path, "value": value}]
+                    FAKE_HARDWARE_UUID, [{"op": "add", "path": path, "value": value}]
                 )
 
             return test
