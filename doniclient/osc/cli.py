@@ -56,17 +56,6 @@ class ListHardware(BaseParser, command.Lister):
             data = hw_client.export()
         else:
             data = hw_client.list()
-        
-        worker_types = set([j['worker_type'] for i in data for j in i['workers']])
-        print(worker_types)
-        print(labels)
-        pep = (
-            oscutils.get_dict_properties(
-                    s, columns, formatters={"Properties": oscutils.format_dict}
-            )
-            for s in data
-        )
-        print(i for i in pep)
         return (
             labels,
             (
