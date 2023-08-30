@@ -85,7 +85,7 @@ class ListHardware(BaseParser, command.Lister):
         else:
             data = hw_client.list()
 
-        worker_types = set()
+        worker_types = []
         output_data = []
 
         # Extract filter values for better readability
@@ -112,11 +112,13 @@ class ListHardware(BaseParser, command.Lister):
             for worker_type in worker_states:
                 worker_state = worker_states.get(worker_type, "-")
                 output_item = output_item + (worker_state,)
-                worker_types.add(worker_type)
+                
+                if worker_type not in worker_types:
+                    worker_types.append(worker_type)
 
             output_data.append(output_item)
 
-        labels += list(worker_types)  # Add worker types to labels list
+        labels += worker_types  # Add worker types to labels list
         return labels, output_data
 
 
