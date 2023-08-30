@@ -39,9 +39,9 @@ class FakeHardware(object):
 
     def create_one_worker(worker_type="", worker_state=""):
         worker = {
-            'state': worker_state,
-            'state_details': {},
-            'worker_type': worker_type
+            "state": worker_state,
+            "state_details": {},
+            "worker_type": worker_type,
         }
         return worker
 

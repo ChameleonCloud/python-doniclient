@@ -41,14 +41,14 @@ class ListHardware(BaseParser, command.Lister):
             action="store_true",
         )
         parser.add_argument(
-            '--worker-type',
-            metavar='<worker_type>',
+            "--worker-type",
+            metavar="<worker_type>",
             help="Filter by worker type",
             required=False,
             default="",
         )
         parser.add_argument(
-            '--worker-state',
+            "--worker-state",
             help="Filter by worker state",
             choices=["PENDING", "IN_PROGRESS", "ERROR", "STEADY"],
             required=False,
@@ -75,7 +75,9 @@ class ListHardware(BaseParser, command.Lister):
 
         if parsed_args.long:
             columns = res_fields.HARDWARE_DETAILED_RESOURCE.fields
-            labels = list(res_fields.HARDWARE_DETAILED_RESOURCE.labels)  # Convert tuple to list
+            labels = list(
+                res_fields.HARDWARE_DETAILED_RESOURCE.labels
+            )  # Convert tuple to list
 
         # Fetch hardware data based on --all option
         if parsed_args.all:
@@ -92,17 +94,15 @@ class ListHardware(BaseParser, command.Lister):
 
         for hardware in data:
             worker_states = self.extract_worker_states(hardware.get("workers", []))
-            
+
             # Apply worker type and state filters
-            if (
-                (worker_type_filter and worker_type_filter not in worker_states)
-                or (worker_state_filter and worker_state_filter not in worker_states.values())
+            if (worker_type_filter and worker_type_filter not in worker_states) or (
+                worker_state_filter
+                and worker_state_filter not in worker_states.values()
             ):
                 continue
-            
-            output_item = oscutils.get_dict_properties(
-                hardware, columns
-            )
+
+            output_item = oscutils.get_dict_properties(hardware, columns)
 
             # Apply combined worker type and state filter
             if worker_type_filter and worker_state_filter:
@@ -279,7 +279,7 @@ class CreateHardware(CreateOrUpdateParser):
         """Create new HW item."""
         # Call superclass action to parse input json
         super().take_action(parsed_args)
-    
+
         hw_client = self.app.client_manager.inventory
 
         hw_type = parsed_args.hardware_type
@@ -341,7 +341,7 @@ class UpdateHardware(CreateOrUpdateParser, HardwarePatchCommand):
             pass
 
         return patch
-    
+
     def take_action(self, parsed_args):
         hw_client = self.app.client_manager.inventory
         try:

@@ -3,6 +3,7 @@ from doniclient.tests.osc import fakes as hardware_fakes
 from osc_lib import utils as oscutils
 from osc_lib import exceptions
 import unittest
+
 FAKE_HARDWARE_UUID = hardware_fakes.hardware_uuid
 FAKE_HARDWARE_NAME = hardware_fakes.hardware_name
 
@@ -31,7 +32,14 @@ UPDATE_PARAMS = [
         "test@foo.bar",
         True,
     ),
-    ("device", "--local-egress", "local_egress", "/properties/local_egress", "allow", False),
+    (
+        "device",
+        "--local-egress",
+        "local_egress",
+        "/properties/local_egress",
+        "allow",
+        False,
+    ),
 ]
 
 
@@ -102,23 +110,20 @@ class TestHardwareList(TestHardware):
         super().setUp()
 
         hw1 = hardware_fakes.FakeHardware.create_one_hardware()
-        hw1['workers'].append(
+        hw1["workers"].append(
             hardware_fakes.FakeHardware.create_one_worker(
-                worker_type="blazar",
-                worker_state="PENDING"
+                worker_type="blazar", worker_state="PENDING"
             )
         )
-        hw1['workers'].append(
+        hw1["workers"].append(
             hardware_fakes.FakeHardware.create_one_worker(
-                worker_type="ironic",
-                worker_state="STEADY"
+                worker_type="ironic", worker_state="STEADY"
             )
         )
         hw2 = hardware_fakes.FakeHardware.create_one_hardware()
-        hw2['workers'].append(
+        hw2["workers"].append(
             hardware_fakes.FakeHardware.create_one_worker(
-                worker_type="ironic",
-                worker_state="PENDING"
+                worker_type="ironic", worker_state="PENDING"
             )
         )
         self.hardware_mock.list.return_value = list([hw1, hw2])
@@ -141,7 +146,6 @@ class TestHardwareList(TestHardware):
         verifylist = [("worker_state", "PENDING")]
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
 
-
         # DisplayCommandBase.take_action() returns two tuples
         columns, data = self.cmd.take_action(parsed_args)
         self.assertEqual(len(data), 2)
@@ -160,7 +164,6 @@ class TestHardwareList(TestHardware):
 
         expected_args = []
         self.hardware_mock.list.assert_called_with(*expected_args)
-
 
     def test_hardware_list_combined_filters(self):
         # Test with both worker type and state filters
@@ -207,12 +210,15 @@ class TestHardwareDelete(TestHardware):
         # return two hardwares with same name
         self.hardware_mock.list.return_value = [
             hardware_fakes.FakeHardware.create_one_hardware(),
-            hardware_fakes.FakeHardware.create_one_hardware()
+            hardware_fakes.FakeHardware.create_one_hardware(),
         ]
         try:
             self.cmd.take_action(parsed_args)
         except exceptions.CommandError as e:
-            self.assertEqual(e.args[0], f"More than one resource exists with the name or ID '{FAKE_HARDWARE_NAME}'.")
+            self.assertEqual(
+                e.args[0],
+                f"More than one resource exists with the name or ID '{FAKE_HARDWARE_NAME}'.",
+            )
 
     def test_hardware_delete_w_name(self):
         arglist = [FAKE_HARDWARE_NAME]
@@ -227,18 +233,15 @@ class TestHardwareDelete(TestHardware):
         ]
         self.cmd.take_action(parsed_args)
 
-
     def test_hardware_delete_w_uuid(self):
         arglist = [FAKE_HARDWARE_UUID]
         verifylist = []
         parsed_args = self.check_parser(self.cmd, arglist, verifylist)
         self.hardware_mock.get.return_value = (
-                    hardware_fakes.FakeHardware.create_one_hardware()
-                )
-        self.cmd.take_action(parsed_args)
-        self.hardware_mock.delete.assert_called_with(
-            FAKE_HARDWARE_UUID
+            hardware_fakes.FakeHardware.create_one_hardware()
         )
+        self.cmd.take_action(parsed_args)
+        self.hardware_mock.delete.assert_called_with(FAKE_HARDWARE_UUID)
 
 
 class TestHardwareSetMeta(type):
@@ -283,7 +286,9 @@ class TestHardwareSetMeta(type):
 
         for hw_type, arg, prop, path, value, use_name in UPDATE_PARAMS:
             test_name = "test_device_update_%s" % prop
-            dict[test_name] = gen_test(hw_type, arg, prop, path, value, use_name=use_name)
+            dict[test_name] = gen_test(
+                hw_type, arg, prop, path, value, use_name=use_name
+            )
         return type.__new__(mcs, name, bases, dict)
 
 
