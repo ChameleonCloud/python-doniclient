@@ -55,7 +55,6 @@ HARDWARE_RESOURCE = Resource(
     [
         "uuid",
         "name",
-        "properties",
     ]
 )
 

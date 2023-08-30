@@ -40,31 +40,84 @@ class ListHardware(BaseParser, command.Lister):
             help="Include all columns.",
             action="store_true",
         )
+        parser.add_argument(
+            "--worker-type",
+            metavar="<worker_type>",
+            help="Filter by worker type",
+            required=False,
+            default="",
+        )
+        parser.add_argument(
+            "--worker-state",
+            help="Filter by worker state",
+            choices=["PENDING", "IN_PROGRESS", "ERROR", "STEADY"],
+            required=False,
+            default="",
+        )
         return parser
 
+    def extract_worker_states(self, workers):
+        # Extract worker types and their corresponding states from workers list
+        worker_states = {}
+        for worker in workers:
+            worker_type = worker.get("worker_type")
+            state = worker.get("state")
+            if worker_type and state:
+                worker_states[worker_type] = state
+        return worker_states
+
     def take_action(self, parsed_args):
-        """List all hw items in Doni."""
+        """List all hardware items in Doni."""
+
         hw_client = self.app.client_manager.inventory
         columns = res_fields.HARDWARE_RESOURCE.fields
-        labels = res_fields.HARDWARE_RESOURCE.labels
+        labels = list(res_fields.HARDWARE_RESOURCE.labels)  # Convert tuple to list
 
         if parsed_args.long:
             columns = res_fields.HARDWARE_DETAILED_RESOURCE.fields
-            labels = res_fields.HARDWARE_DETAILED_RESOURCE.labels
+            labels = list(
+                res_fields.HARDWARE_DETAILED_RESOURCE.labels
+            )  # Convert tuple to list
 
+        # Fetch hardware data based on --all option
         if parsed_args.all:
             data = hw_client.export()
         else:
             data = hw_client.list()
-        return (
-            labels,
-            (
-                oscutils.get_dict_properties(
-                    s, columns, formatters={"Properties": oscutils.format_dict}
-                )
-                for s in data
-            ),
-        )
+
+        worker_types = set()
+        output_data = []
+
+        # Extract filter values for better readability
+        worker_type_filter = parsed_args.worker_type
+        worker_state_filter = parsed_args.worker_state
+
+        for hardware in data:
+            worker_states = self.extract_worker_states(hardware.get("workers", []))
+
+            # Apply worker type and state filters
+            if (worker_type_filter and worker_type_filter not in worker_states) or (
+                worker_state_filter
+                and worker_state_filter not in worker_states.values()
+            ):
+                continue
+
+            output_item = oscutils.get_dict_properties(hardware, columns)
+
+            # Apply combined worker type and state filter
+            if worker_type_filter and worker_state_filter:
+                if worker_state_filter != worker_states.get(worker_type_filter):
+                    continue
+
+            for worker_type in worker_states:
+                worker_state = worker_states.get(worker_type, "-")
+                output_item = output_item + (worker_state,)
+                worker_types.add(worker_type)
+
+            output_data.append(output_item)
+
+        labels += list(worker_types)  # Add worker types to labels list
+        return labels, output_data
 
 
 class GetHardware(BaseParser, command.ShowOne):
@@ -226,7 +279,7 @@ class CreateHardware(CreateOrUpdateParser):
         """Create new HW item."""
         # Call superclass action to parse input json
         super().take_action(parsed_args)
-    
+
         hw_client = self.app.client_manager.inventory
 
         hw_type = parsed_args.hardware_type
@@ -288,7 +341,7 @@ class UpdateHardware(CreateOrUpdateParser, HardwarePatchCommand):
             pass
 
         return patch
-    
+
     def take_action(self, parsed_args):
         hw_client = self.app.client_manager.inventory
         try:
