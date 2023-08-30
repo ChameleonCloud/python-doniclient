@@ -333,3 +333,41 @@ class ImportHardware(BaseParser):
                             raise ex
                     else:
                         LOG.debug(data)
+
+
+class UnsetHardware(CreateOrUpdateParser, HardwarePatchCommand):
+    """Update properties of existing hardware item."""
+
+    needs_uuid = True
+
+    def get_parser(self, prog_name):
+        parser = super().get_parser(prog_name)
+
+        args_to_default = ("name", "properties")
+        # Unset all defaults to avoid accidental changes
+        for arg in parser._get_optional_actions():
+            if arg.dest in args_to_default:
+                arg.default = argparse.SUPPRESS
+
+        return parser
+
+    def get_patch(self, parsed_args):
+        patch = []
+
+        field_map = {
+            "name": "name",
+        }
+
+        for key, val in field_map.items():
+            arg = getattr(parsed_args, key, None)
+            if arg:
+                patch.append({"op": "remove", "path": f"/{val}"})
+
+        try:
+            for key in parsed_args.properties:
+                patch.append({"op": "remove", "path": f"/properties/{key}"})
+        except AttributeError:
+            pass
+
+        return patch
+
