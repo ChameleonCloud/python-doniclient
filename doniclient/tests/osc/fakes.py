@@ -37,6 +37,14 @@ class FakeHardware(object):
         # hw_item = fakes.FakeResource(info=copy.deepcopy(hw_info), loaded=True)
         return hw_info
 
+    def create_one_worker(worker_type="", worker_state=""):
+        worker = {
+            "state": worker_state,
+            "state_details": {},
+            "worker_type": worker_type,
+        }
+        return worker
+
 
 class FakeHardwareClient(object):
     def __init__(self, **kwargs) -> None:
