@@ -144,6 +144,46 @@ def _add_prop_flag_group(parser, hardware_type, prop_flags):
         )
 
 
+class HardwarePropertyFlags:
+    baremetal_property_flags = {
+        "management_address": PropertyFlag("management_address", str, None),
+        "ipmi_username": PropertyFlag("ipmi_username", str, None),
+        "ipmi_password": PropertyFlag("ipmi_password", str, None),
+        "ipmi_terminal_port": PropertyFlag("ipmi_terminal_port", int, None),
+        "baremetal_deploy_kernel_image": PropertyFlag(
+            "deploy_kernel", str, None
+        ),
+        "baremetal_deploy_ramdisk_image": PropertyFlag(
+            "deploy_ramdisk", str, None
+        ),
+        # FIXME(jason): why is the flag named ironic_?
+        "baremetal_driver": PropertyFlag("ironic_driver", str, None),
+        "baremetal_resource_class": PropertyFlag(
+            "resource_class", str, "baremetal"
+        ),
+        "baremetal_capabilities": PropertyFlag(
+            "capabilities", json.loads, None
+        ),
+        "cpu_arch": PropertyFlag("cpu_arch", str, "x86_64"),
+        "node_type": PropertyFlag("blazar_node_type", str, None),
+        "su_factor": PropertyFlag("blazar_su_factor", float, 1.0),
+        "placement": PropertyFlag("placement", json.loads, None),
+        "interfaces": PropertyFlag("interfaces", json.loads, {}),
+    }
+    device_property_flags = {
+        "machine_name": PropertyFlag("machine-name", str, None),
+        "contact_email": PropertyFlag("contact-email", str, None),
+        "channels": PropertyFlag("channels", json.loads, None),
+        "application_credential_id": PropertyFlag(
+            "application-credential-id", str, None
+        ),
+        "application_credential_secret": PropertyFlag(
+            "application-credential-secret", str, None
+        ),
+        "local_egress": PropertyFlag("local-egress", str, None),
+    }
+
+
 class CreateOrUpdateParser(BaseParser):
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
@@ -167,48 +207,13 @@ class CreateOrUpdateParser(BaseParser):
         _add_prop_flag_group(
             parser,
             "baremetal",
-            {
-                "management_address": PropertyFlag("management_address", str, None),
-                "ipmi_username": PropertyFlag("ipmi_username", str, None),
-                "ipmi_password": PropertyFlag("ipmi_password", str, None),
-                "ipmi_terminal_port": PropertyFlag("ipmi_terminal_port", int, None),
-                "baremetal_deploy_kernel_image": PropertyFlag(
-                    "deploy_kernel", str, None
-                ),
-                "baremetal_deploy_ramdisk_image": PropertyFlag(
-                    "deploy_ramdisk", str, None
-                ),
-                # FIXME(jason): why is the flag named ironic_?
-                "baremetal_driver": PropertyFlag("ironic_driver", str, None),
-                "baremetal_resource_class": PropertyFlag(
-                    "resource_class", str, "baremetal"
-                ),
-                "baremetal_capabilities": PropertyFlag(
-                    "capabilities", json.loads, None
-                ),
-                "cpu_arch": PropertyFlag("cpu_arch", str, "x86_64"),
-                "node_type": PropertyFlag("blazar_node_type", str, None),
-                "su_factor": PropertyFlag("blazar_su_factor", float, 1.0),
-                "placement": PropertyFlag("placement", json.loads, None),
-                "interfaces": PropertyFlag("interfaces", json.loads, {}),
-            },
+            HardwarePropertyFlags.baremetal_property_flags,
         )
 
         _add_prop_flag_group(
             parser,
             "device",
-            {
-                "machine_name": PropertyFlag("machine-name", str, None),
-                "contact_email": PropertyFlag("contact-email", str, None),
-                "channels": PropertyFlag("channels", json.loads, None),
-                "application_credential_id": PropertyFlag(
-                    "application-credential-id", str, None
-                ),
-                "application_credential_secret": PropertyFlag(
-                    "application-credential-secret", str, None
-                ),
-                "local_egress": PropertyFlag("local-egress", str, None),
-            },
+            HardwarePropertyFlags.device_property_flags,
         )
 
         return parser
@@ -270,6 +275,8 @@ class UpdateHardware(CreateOrUpdateParser, HardwarePatchCommand):
         return parser
 
     def get_patch(self, parsed_args):
+        
+        print(parsed_args)
         patch = []
 
         field_map = {
@@ -335,24 +342,52 @@ class ImportHardware(BaseParser):
                         LOG.debug(data)
 
 
-class UnsetHardware(CreateOrUpdateParser, HardwarePatchCommand):
-    """Update properties of existing hardware item."""
+def _add_unset_prop_flag_group(parser, hardware_type, prop_flags):
+    """Register a mapping of flags for corresponding hardware properties.
+
+    Args:
+        parser (argparse.Parser): the parent parser
+        group_name (str): the name of the new argument grouping. This is just used
+            to visually group the properties in the CLI usage text.
+        prop_flags (dict): a mapping of property names to PropertyFlag objects
+            containing information about how the flag should be displayed and parsed.
+            Importantly, the property name MUST match some field on the ``properties``
+            dict on the target hardware type.
+    """
+    group = parser.add_argument_group(f"{hardware_type} properties")
+    for prop_name, flag in prop_flags.items():
+        group.add_argument(
+            f"--{flag.flag}",
+            dest=f"properties.{prop_name}",
+            action="store_true",
+        )
+
+
+class UnsetHardware(HardwarePatchCommand):
+    """Unset properties of existing hardware item."""
 
     needs_uuid = True
 
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
 
-        args_to_default = ("name", "properties")
-        # Unset all defaults to avoid accidental changes
-        for arg in parser._get_optional_actions():
-            if arg.dest in args_to_default:
-                arg.default = argparse.SUPPRESS
+        _add_unset_prop_flag_group(
+            parser,
+            "baremetal",
+            HardwarePropertyFlags.baremetal_property_flags,
+        )
+
+        _add_unset_prop_flag_group(
+            parser,
+            "device",
+            HardwarePropertyFlags.device_property_flags,
+        )
 
         return parser
 
     def get_patch(self, parsed_args):
         patch = []
+        print(parsed_args)
 
         field_map = {
             "name": "name",
@@ -367,7 +402,8 @@ class UnsetHardware(CreateOrUpdateParser, HardwarePatchCommand):
             for key in parsed_args.properties:
                 patch.append({"op": "remove", "path": f"/properties/{key}"})
         except AttributeError:
+            print("AttributeError")
             pass
+        print(parsed_args.properties)
 
         return patch
-
