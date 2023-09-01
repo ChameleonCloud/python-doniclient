@@ -250,7 +250,6 @@ class TestHardwareSetMeta(type):
     def __new__(mcs, name, bases, dict):
         def gen_test(hw_type, arg, prop, path, value, use_name=False):
             def test(self):
-
                 name_or_id = FAKE_HARDWARE_UUID
                 self.hardware_mock.get.return_value = (
                     hardware_fakes.FakeHardware.create_one_hardware()
@@ -278,9 +277,14 @@ class TestHardwareSetMeta(type):
                 self.cmd.take_action(parsed_args)
                 # test if the get is called with name
                 self.hardware_mock.get.assert_called_with(name_or_id)
-                self.hardware_mock.update.assert_called_with(
-                    FAKE_HARDWARE_UUID, [{"op": "add", "path": path, "value": value}]
+                if 'Unset' in name:
+                    self.hardware_mock.update.assert_called_with(
+                    FAKE_HARDWARE_UUID, [{"op": "remove", "path": path, "value": value}]
                 )
+                else:
+                    self.hardware_mock.update.assert_called_with(
+                        FAKE_HARDWARE_UUID, [{"op": "add", "path": path, "value": value}]
+                    )
 
             return test
 
@@ -296,6 +300,12 @@ class TestHardwareSet(TestHardware, metaclass=TestHardwareSetMeta):
     def setUp(self):
         super().setUp()
         self.cmd = hardware_cli.UpdateHardware(self.app, None)
+
+
+class TestHardwareUnset(TestHardware, metaclass=TestHardwareSetMeta):
+    def setUp(self):
+        super().setUp()
+        self.cmd = hardware_cli.UnsetHardware(self.app, None)
 
 
 class TestHardwareSync(TestHardware):
