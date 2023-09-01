@@ -13,6 +13,7 @@ from osc_lib.command import command
 from doniclient.osc.common import (
     BaseParser,
     ExpandDotNotation,
+    ExpandDotNotationAndStoreTrue,
     HardwarePatchCommand,
     conditional_action,
 )
@@ -171,7 +172,7 @@ class SyncHardware(BaseParser):
             raise ex
 
 
-def _add_prop_flag_group(parser, hardware_type, prop_flags):
+def _add_prop_flag_group(parser, hardware_type, prop_flags, prog_name):
     """Register a mapping of flags for corresponding hardware properties.
 
     Args:
@@ -182,18 +183,28 @@ def _add_prop_flag_group(parser, hardware_type, prop_flags):
             containing information about how the flag should be displayed and parsed.
             Importantly, the property name MUST match some field on the ``properties``
             dict on the target hardware type.
+        prog_name (str): command executed (openstack hardware <set/unset>)
+
     """
     # Only store this flag in the resulting args if the hardware_type is in effect.
     condition_fn = lambda args: args.hardware_type == hardware_type
     group = parser.add_argument_group(f"{hardware_type} properties")
     for prop_name, flag in prop_flags.items():
+        argument_params = {}
+        argument_params["type"] = flag.type
+        argument_params["default"] = flag.default
+        argument_params["metavar"] = f"<{flag.flag}>"
+        argument_params["dest"] = f"properties.{prop_name}"
+        argument_params["action"] = conditional_action(ExpandDotNotation, condition_fn)
+        if 'unset' in prog_name:
+            argument_params["nargs"] = 0
+            argument_params["type"] = None
+            argument_params["default"] = None
+            argument_params["metavar"] = None
+            argument_params["action"] = conditional_action(ExpandDotNotationAndStoreTrue, condition_fn)
         group.add_argument(
             f"--{flag.flag}",
-            type=flag.type,
-            default=flag.default,
-            metavar=f"<{flag.flag}>",
-            dest=f"properties.{prop_name}",
-            action=conditional_action(ExpandDotNotation, condition_fn),
+            **argument_params
         )
 
 
@@ -261,12 +272,14 @@ class CreateOrUpdateParser(BaseParser):
             parser,
             "baremetal",
             HardwarePropertyFlags.baremetal_property_flags,
+            prog_name
         )
 
         _add_prop_flag_group(
             parser,
             "device",
             HardwarePropertyFlags.device_property_flags,
+            prog_name
         )
 
         return parser
@@ -328,8 +341,6 @@ class UpdateHardware(CreateOrUpdateParser, HardwarePatchCommand):
         return parser
 
     def get_patch(self, parsed_args):
-        
-        print(parsed_args)
         patch = []
 
         field_map = {
@@ -395,52 +406,13 @@ class ImportHardware(BaseParser):
                         LOG.debug(data)
 
 
-def _add_unset_prop_flag_group(parser, hardware_type, prop_flags):
-    """Register a mapping of flags for corresponding hardware properties.
-
-    Args:
-        parser (argparse.Parser): the parent parser
-        group_name (str): the name of the new argument grouping. This is just used
-            to visually group the properties in the CLI usage text.
-        prop_flags (dict): a mapping of property names to PropertyFlag objects
-            containing information about how the flag should be displayed and parsed.
-            Importantly, the property name MUST match some field on the ``properties``
-            dict on the target hardware type.
-    """
-    group = parser.add_argument_group(f"{hardware_type} properties")
-    for prop_name, flag in prop_flags.items():
-        group.add_argument(
-            f"--{flag.flag}",
-            dest=f"properties.{prop_name}",
-            action="store_true",
-        )
-
-
-class UnsetHardware(HardwarePatchCommand):
+class UnsetHardware(UpdateHardware):
     """Unset properties of existing hardware item."""
 
     needs_uuid = True
 
-    def get_parser(self, prog_name):
-        parser = super().get_parser(prog_name)
-
-        _add_unset_prop_flag_group(
-            parser,
-            "baremetal",
-            HardwarePropertyFlags.baremetal_property_flags,
-        )
-
-        _add_unset_prop_flag_group(
-            parser,
-            "device",
-            HardwarePropertyFlags.device_property_flags,
-        )
-
-        return parser
-
     def get_patch(self, parsed_args):
         patch = []
-        print(parsed_args)
 
         field_map = {
             "name": "name",
@@ -449,14 +421,12 @@ class UnsetHardware(HardwarePatchCommand):
         for key, val in field_map.items():
             arg = getattr(parsed_args, key, None)
             if arg:
-                patch.append({"op": "remove", "path": f"/{val}"})
+                patch.append({"op": "remove", "path": f"/{val}", "value": arg})
 
         try:
-            for key in parsed_args.properties:
-                patch.append({"op": "remove", "path": f"/properties/{key}"})
+            for key, val in parsed_args.properties.items():
+                patch.append({"op": "remove", "path": f"/properties/{key}", "value": val})
         except AttributeError:
-            print("AttributeError")
             pass
-        print(parsed_args.properties)
 
         return patch
