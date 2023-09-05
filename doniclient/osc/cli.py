@@ -167,7 +167,13 @@ class SyncHardware(BaseParser):
     def take_action(self, parsed_args):
         hw_client = self.app.client_manager.inventory
         try:
-            hw_client.sync(parsed_args.uuid)
+            data = oscutils.find_resource(hw_client, parsed_args.uuid)
+        except HttpError as ex:
+            LOG.error(ex.response.text)
+            raise ex
+        uuid = data["uuid"]
+        try:
+            hw_client.sync(uuid)
         except HttpError as ex:
             LOG.error(ex.response.text)
             raise ex

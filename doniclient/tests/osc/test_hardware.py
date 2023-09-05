@@ -302,3 +302,26 @@ class TestHardwareSync(TestHardware):
     def setUp(self):
         super().setUp()
         self.cmd = hardware_cli.SyncHardware(self.app, None)
+
+    def test_hardware_sync_w_uuid(self):
+        arglist = [FAKE_HARDWARE_UUID]
+        verifylist = []
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+        self.hardware_mock.get.return_value = (
+            hardware_fakes.FakeHardware.create_one_hardware()
+        )
+        self.cmd.take_action(parsed_args)
+        self.hardware_mock.sync.assert_called_with(FAKE_HARDWARE_UUID)
+
+    def test_hardware_sync_w_name(self):
+        arglist = [FAKE_HARDWARE_NAME]
+        verifylist = []
+        parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+        self.hardware_mock.get.side_effect = Exception
+        self.hardware_mock.find.side_effect = Exception
+        # return two hardwares with same name
+        self.hardware_mock.list.return_value = [
+            hardware_fakes.FakeHardware.create_one_hardware()
+        ]
+        self.cmd.take_action(parsed_args)
+        self.hardware_mock.sync.assert_called_with(FAKE_HARDWARE_UUID)
