@@ -191,9 +191,8 @@ class SyncHardware(BaseParser):
             raise ex
 
 
-def _add_prop_flag_group(parser, hardware_type, prop_flags):
+def _add_prop_flag_group(parser, hardware_type, prop_flags, prog_name):
     """Register a mapping of flags for corresponding hardware properties.
-
     Args:
         parser (argparse.Parser): the parent parser
         group_name (str): the name of the new argument grouping. This is just used
@@ -202,6 +201,7 @@ def _add_prop_flag_group(parser, hardware_type, prop_flags):
             containing information about how the flag should be displayed and parsed.
             Importantly, the property name MUST match some field on the ``properties``
             dict on the target hardware type.
+        prog_name (str): command executed (openstack hardware <set/unset>)
     """
     # Only store this flag in the resulting args if the hardware_type is in effect.
     condition_fn = lambda args: args.hardware_type == hardware_type
@@ -216,7 +216,7 @@ def _add_prop_flag_group(parser, hardware_type, prop_flags):
         group.add_argument(
             f"--{flag.flag}",
             **argument_params
-        }
+        )
 
 
 class HardwarePropertyFlags:
