@@ -71,6 +71,21 @@ openstack hardware set <hardware_name> --property <property_name>=<new_property_
 
 Sets property for the item `<hardware_name`
 
+### Unset properties of an existing hardware item.
+
+```bash
+openstack hardware unset <hardware_uuid> --property <property_name>
+```
+
+Unsets property `<property_name>` for the item `<hardware_uuid`
+
+```bash
+openstack hardware update <hardware_name> --property <property_name>=<new_property_value>
+```
+
+Unsets property `<property_name>` for the item `<hardware_name>`
+
+
 ## Testing
 
 Run the tests using `stestr`
