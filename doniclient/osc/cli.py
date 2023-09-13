@@ -57,15 +57,21 @@ class ListHardware(BaseParser, command.Lister):
         )
         return parser
 
-    def extract_worker_states(self, workers):
-        # Extract worker types and their corresponding states from workers list
-        worker_states = {}
+    def extract_workers_state(self, workers):
+        # Extract worker types and their corresponding states and last errors from workers list
+        worker_details = {}
         for worker in workers:
             worker_type = worker.get("worker_type")
             state = worker.get("state")
-            if worker_type and state:
-                worker_states[worker_type] = state
-        return worker_states
+            last_error = worker.get("state_details", {}).get("last_error")
+            if worker_type and (state or last_error):
+                if worker_type not in worker_details:
+                    worker_details[worker_type] = {}
+                if state:
+                    worker_details[worker_type]["state"] = state
+                if last_error:
+                    worker_details[worker_type]["last_error"] = last_error
+        return worker_details
 
     def take_action(self, parsed_args):
         """List all hardware items in Doni."""
@@ -86,7 +92,7 @@ class ListHardware(BaseParser, command.Lister):
         else:
             data = hw_client.list()
 
-        worker_types = set()
+        worker_types = []
         output_data = []
 
         # Extract filter values for better readability
@@ -94,12 +100,13 @@ class ListHardware(BaseParser, command.Lister):
         worker_state_filter = parsed_args.worker_state
 
         for hardware in data:
-            worker_states = self.extract_worker_states(hardware.get("workers", []))
+            workers = hardware.get("workers", [])
+            worker_details = self.extract_workers_state(workers)
 
             # Apply worker type and state filters
-            if (worker_type_filter and worker_type_filter not in worker_states) or (
+            if (worker_type_filter and worker_type_filter not in worker_details) or (
                 worker_state_filter
-                and worker_state_filter not in worker_states.values()
+                and all(worker_state_filter != details["state"] for details in worker_details.values())
             ):
                 continue
 
@@ -107,18 +114,25 @@ class ListHardware(BaseParser, command.Lister):
 
             # Apply combined worker type and state filter
             if worker_type_filter and worker_state_filter:
-                if worker_state_filter != worker_states.get(worker_type_filter):
+                details = worker_details.get(worker_type_filter, {})
+                if worker_state_filter not in details["state"]:
                     continue
 
-            for worker_type in worker_states:
-                worker_state = worker_states.get(worker_type, "-")
+            for worker_type, details in worker_details.items():
+                worker_state = details.get("state", "-")
+                worker_error = details.get("last_error", "-")
                 output_item = output_item + (worker_state,)
-                worker_types.add(worker_type)
+                output_item = output_item + (worker_error,)
+
+                if worker_type not in worker_types:
+                    worker_types.append(worker_type)
+                    worker_types.append(worker_type + " last error")
 
             output_data.append(output_item)
 
-        labels += list(worker_types)  # Add worker types to labels list
+        labels += worker_types  # Add worker types to labels list
         return labels, output_data
+
 
 
 class GetHardware(BaseParser, command.ShowOne):
@@ -166,7 +180,13 @@ class SyncHardware(BaseParser):
     def take_action(self, parsed_args):
         hw_client = self.app.client_manager.inventory
         try:
-            hw_client.sync(parsed_args.uuid)
+            data = oscutils.find_resource(hw_client, parsed_args.uuid)
+        except HttpError as ex:
+            LOG.error(ex.response.text)
+            raise ex
+        uuid = data["uuid"]
+        try:
+            hw_client.sync(uuid)
         except HttpError as ex:
             LOG.error(ex.response.text)
             raise ex
