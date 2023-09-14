@@ -85,6 +85,23 @@ openstack hardware update <hardware_name> --property <property_name>=<new_proper
 
 Unsets property `<property_name>` for the item `<hardware_name>`
 
+## Testing
+
+Run the tests using `stestr`
+
+```bash
+stestr run
+```
+
+## Contributing
+
+### Publishing new versions
+
+Use `poetry`'s built-in publish utility. Currently packages are published under the `chameleoncloud` user account on PyPi.
+
+```shell
+poetry publish --build
+```
 
 ## Testing
 

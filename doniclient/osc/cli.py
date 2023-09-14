@@ -192,7 +192,7 @@ class SyncHardware(BaseParser):
             raise ex
 
 
-def _add_prop_flag_group(parser, hardware_type, prop_flags, prog_name, prog_name):
+def _add_prop_flag_group(parser, hardware_type, prop_flags, prog_name):
     """Register a mapping of flags for corresponding hardware properties.
     Args:
         parser (argparse.Parser): the parent parser
@@ -203,7 +203,6 @@ def _add_prop_flag_group(parser, hardware_type, prop_flags, prog_name, prog_name
             Importantly, the property name MUST match some field on the ``properties``
             dict on the target hardware type.
         prog_name (str): command executed (openstack hardware <set/unset>)
-
     """
     # Only store this flag in the resulting args if the hardware_type is in effect.
     condition_fn = lambda args: args.hardware_type == hardware_type
@@ -223,48 +222,6 @@ def _add_prop_flag_group(parser, hardware_type, prop_flags, prog_name, prog_name
             argument_params["action"] = conditional_action(ExpandDotNotationAndStoreTrue, condition_fn)
         group.add_argument(
             f"--{flag.flag}",
-            **argument_params
-        )
-
-
-class HardwarePropertyFlags:
-    baremetal_property_flags = {
-        "management_address": PropertyFlag("management_address", str, None),
-        "ipmi_username": PropertyFlag("ipmi_username", str, None),
-        "ipmi_password": PropertyFlag("ipmi_password", str, None),
-        "ipmi_terminal_port": PropertyFlag("ipmi_terminal_port", int, None),
-        "baremetal_deploy_kernel_image": PropertyFlag(
-            "deploy_kernel", str, None
-        ),
-        "baremetal_deploy_ramdisk_image": PropertyFlag(
-            "deploy_ramdisk", str, None
-        ),
-        # FIXME(jason): why is the flag named ironic_?
-        "baremetal_driver": PropertyFlag("ironic_driver", str, None),
-        "baremetal_resource_class": PropertyFlag(
-            "resource_class", str, "baremetal"
-        ),
-        "baremetal_capabilities": PropertyFlag(
-            "capabilities", json.loads, None
-        ),
-        "cpu_arch": PropertyFlag("cpu_arch", str, "x86_64"),
-        "node_type": PropertyFlag("blazar_node_type", str, None),
-        "su_factor": PropertyFlag("blazar_su_factor", float, 1.0),
-        "placement": PropertyFlag("placement", json.loads, None),
-        "interfaces": PropertyFlag("interfaces", json.loads, {}),
-    }
-    device_property_flags = {
-        "machine_name": PropertyFlag("machine-name", str, None),
-        "contact_email": PropertyFlag("contact-email", str, None),
-        "channels": PropertyFlag("channels", json.loads, None),
-        "application_credential_id": PropertyFlag(
-            "application-credential-id", str, None
-        ),
-        "application_credential_secret": PropertyFlag(
-            "application-credential-secret", str, None
-        ),
-        "local_egress": PropertyFlag("local-egress", str, None),
-    }
             **argument_params
         )
 
@@ -334,15 +291,11 @@ class CreateOrUpdateParser(BaseParser):
             "baremetal",
             HardwarePropertyFlags.baremetal_property_flags,
             prog_name
-            HardwarePropertyFlags.baremetal_property_flags,
-            prog_name
         )
 
         _add_prop_flag_group(
             parser,
             "device",
-            HardwarePropertyFlags.device_property_flags,
-            prog_name
             HardwarePropertyFlags.device_property_flags,
             prog_name
         )
