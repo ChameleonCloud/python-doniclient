@@ -13,6 +13,7 @@ from osc_lib.command import command
 from doniclient.osc.common import (
     BaseParser,
     ExpandDotNotation,
+    ExpandDotNotationAndStoreTrue,
     HardwarePatchCommand,
     conditional_action,
 )
@@ -213,6 +214,12 @@ def _add_prop_flag_group(parser, hardware_type, prop_flags, prog_name):
         argument_params["metavar"] = f"<{flag.flag}>"
         argument_params["dest"] = f"properties.{prop_name}"
         argument_params["action"] = conditional_action(ExpandDotNotation, condition_fn)
+        if 'unset' in prog_name:
+            argument_params["nargs"] = 0
+            argument_params["type"] = None
+            argument_params["default"] = None
+            argument_params["metavar"] = None
+            argument_params["action"] = conditional_action(ExpandDotNotationAndStoreTrue, condition_fn)
         group.add_argument(
             f"--{flag.flag}",
             **argument_params
@@ -415,3 +422,29 @@ class ImportHardware(BaseParser):
                             raise ex
                     else:
                         LOG.debug(data)
+
+
+class UnsetHardware(UpdateHardware):
+    """Unset properties of existing hardware item."""
+
+    needs_uuid = True
+
+    def get_patch(self, parsed_args):
+        patch = []
+
+        field_map = {
+            "name": "name",
+        }
+
+        for key, val in field_map.items():
+            arg = getattr(parsed_args, key, None)
+            if arg:
+                patch.append({"op": "remove", "path": f"/{val}", "value": arg})
+
+        try:
+            for key, val in parsed_args.properties.items():
+                patch.append({"op": "remove", "path": f"/properties/{key}", "value": val})
+        except AttributeError:
+            pass
+
+        return patch

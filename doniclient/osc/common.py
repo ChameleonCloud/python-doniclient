@@ -63,6 +63,17 @@ class ExpandDotNotation(argparse.Action):
         getattr(namespace, group).update({dest: values})
 
 
+class ExpandDotNotationAndStoreTrue(argparse.Action):
+    """Set property based on dest.key."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        group, dest = self.dest.split(".", 2)
+
+        if not hasattr(namespace, group):
+            setattr(namespace, group, {})
+        getattr(namespace, group).update({dest: True})
+
+
 class BaseParser(command.Command):
     """Base Parser for use with Doni commands.
 
