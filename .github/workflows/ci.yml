@@ -1,35 +1,35 @@
 name: CI
 
-env:
-  # This should match the default python_version build arg
-  PYTHON_VERSION: 3.8
-  XDG_CACHE_HOME: /tmp/.cache
 on:
   push:
+    branches:
+      - main
+      - 'stable/**'
   pull_request:
   release:
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
+        linter: [false]
+        include:
+          - python-version: '3.8'
+            linter: pep8
     steps:
-      - uses: actions/checkout@v3
+      - name: Sets TOXENV to run linter
+        run: |
+          echo "TOXENV=pep8" >> $GITHUB_ENV
+        if: startsWith( matrix.linter, 'pep8')
+      - name: checkout source code
+        uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - uses: abatilo/actions-poetry@v2
-      - uses: actions/cache@v3
-        with:
-          path: ${{ env.XDG_CACHE_HOME }}
-          key: ${{ runner.os }}-poetry-${{ hashFiles('poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-poetry-
-            ${{ runner.os }}-
-      - name: Install Dependencies
-        run: poetry install
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          pip install tox tox-gh-actions
       - name: Run tests
-        run: poetry run pytest --junitxml=pytest.xml
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
-        with:
-          junit_files: "pytest.xml"
+        run: tox

@@ -1,63 +1,50 @@
-[tool.black]
-# Set line length explicitly.
-# See https://black.readthedocs.io/en/stable/the_black_code_style.html#line-length for more details
-line-length = 88
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
-[tool.pytest.ini_options]
-log_cli = true
-log_cli_level = "INFO"
-log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
-log_cli_date_format = "%Y-%m-%d %H:%M:%S"
-filterwarnings = ["ignore::DeprecationWarning"]
-
-[tool.isort]
-known_first_party = "doniclient"
-
-[tool.poetry]
+[project]
+authors = [{ name = "Chameleon Cloud", email = "contact@chameleoncloud.org" }]
 name = "python-doniclient"
 version = "1.0.3"
 description = "This is a plugin for the openstack commandline client, to enable support for the Doni hardware inventory project"
-license = "Apache-2.0"
-authors = ["Chameleon Cloud <contact@chameleoncloud.org>"]
+license = { text = "Apache-2.0" }
 readme = "README.md"
-repository = "https://github.com/ChameleonCloud/python-doniclient"
-
 classifiers = [
     "Environment :: OpenStack",
     "Intended Audience :: Information Technology",
     "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: Apache Software License",
     "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 
-packages = [{ include = "doniclient" }]
+requires-python = ">=3.7"
+dependencies = [
+    "osc-lib ~= 2.4.2",
+    "python-dateutil ~= 2.8.2",
+    "PyYAML ~= 5.3",
+    "keystoneauth1 ~= 4.4.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.7"
-osc-lib = "<=2.4.2"
-python-openstackclient = { version = "<=5.6.2", extras = ["cli"] }
-python-dateutil = "<=2.8.2"
-PyYAML = "~5.3"
-keystoneauth1 = "<=4.4.0"
+[project.optional-dependencies]
+dev = ["pytest ~= 6.2", "oslotest ~= 4.4", "stestr ~= 3.2"]
+lint = ["ruff", "hacking"]
+cli = ["python-openstackclient >= 3.12.0"]
 
-[tool.poetry.dev-dependencies]
-pytest = "^6.2"
-black = "^22.10"
-flake8 = "^3.9.0"
-flake8-bugbear = "^21.4.1"
-pytest-mock = "^3.5.1"
-isort = "^5.8.0"
-pydocstyle = "^6.0.0"
-oslotest = "^4.4.1"
-stestr = "^3.2.1"
+[project.urls]
+repository = "https://github.com/ChameleonCloud/python-doniclient"
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
 
-[tool.poetry.plugins."openstack.cli.extension"]
+[project.entry-points."openstack.cli.extension"]
 inventory = "doniclient.osc.plugin"
 
-[tool.poetry.plugins."openstack.inventory.v1"]
+[project.entry-points."openstack.inventory.v1"]
 hardware_list = "doniclient.osc.cli:ListHardware"
 hardware_import = "doniclient.osc.cli:ImportHardware"
 hardware_show = "doniclient.osc.cli:GetHardware"
@@ -70,3 +57,18 @@ hardware_availability_list = "doniclient.osc.availability:ListHardwareAvailabili
 hardware_availability_set = "doniclient.osc.availability:UpdateHardwareAvailability"
 hardware_availability_add = "doniclient.osc.availability:AddHardwareAvailability"
 hardware_availability_remove = "doniclient.osc.availability:RemoveHardwareAvailability"
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+
+extend-select = [
+    "I", #isort
+    "TD001","TD002", #H101, Todos
+    "D205", #H405 space between docstring summary and body
+    ]
