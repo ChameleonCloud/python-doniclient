@@ -21,7 +21,7 @@ pip install python-doniclient
 ```
 
 ### Cython sources issue
-if you encounter an error message citing cython sources, please run the following to downgrade cython to a compatible version
+if you encounter an error message citing cython sources, please run the following to downgrade cython to a compatible version and use PyYaml 6.0+
 ```pip install "cython<3.0.0"```
 
 ## Authentication
