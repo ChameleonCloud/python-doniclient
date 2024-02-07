@@ -20,6 +20,10 @@ You can install the ChameleonCloud Python Doniclient CLI using pip:
 pip install python-doniclient
 ```
 
+### Cython sources issue
+if you encounter an error message citing cython sources, please run the following to downgrade cython to a compatible version and use PyYaml 6.0+
+```pip install "cython<3.0.0"```
+
 ## Authentication
 Environment variables are the primary authentication method. Please refer to the [documentation on OpenRC scripts](https://chameleoncloud.readthedocs.io/en/latest/technical/cli.html#the-openstack-rc-script)  to learn more about how to download and source your authentication credentials for the CLI;
 
