@@ -1,9 +1,15 @@
-# Contributing guide
+# Contributing 
+
+## Testing
+
+Run the tests using `tox -e py39`
+
 
 ## Publishing new versions
 
-Use `poetry`'s built-in publish utility. Currently packages are published under the `chameleoncloud` user account on PyPi.
+Build the sdist + wheel and upload with `twine`. Packages are published under the `chameleoncloud` user account on PyPi.
 
 ```shell
-poetry publish --build
+python -m build
+twine upload dist/*
 ```
