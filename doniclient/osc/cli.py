@@ -402,8 +402,33 @@ class ImportHardware(BaseParser):
             help="continue if an item already exists, rather than exiting",
             action="store_true",
         )
+        parser.add_argument(
+            "--force_update",
+            action="store_true",
+        )
         parser.add_argument("-f", "--file", help="JSON input file", type=FileType("r"))
         return parser
+
+    def get_patch(self, item):
+        patch = []
+
+        field_map = {
+            "name": "name",
+        }
+
+        for key, val in field_map.items():
+            arg = item.get(key, None)
+            if arg:
+                patch.append({"op": "add", "path": f"/{val}", "value": arg})
+
+        try:
+            properties = item.get("properties", {})
+            for key, val in properties.items():
+                patch.append({"op": "add", "path": f"/properties/{key}", "value": val})
+        except AttributeError:
+            pass
+
+        return patch
 
     def take_action(self, parsed_args):
         hw_client = self.app.client_manager.inventory
@@ -415,9 +440,13 @@ class ImportHardware(BaseParser):
                     try:
                         data = hw_client.create(item)
                     except Conflict as ex:
-                        LOG.error(ex.response.text)
                         if parsed_args.skip_existing:
                             continue
+                        if parsed_args.force_update:
+                            existing = oscutils.find_resource(hw_client, item["name"])
+                            LOG.warn(f"Force patching node {existing.get('uuid')}")
+                            patch = self.get_patch(item)
+                            data = hw_client.update(existing["uuid"], patch)
                         else:
                             raise ex
                     else:
