@@ -1,6 +1,6 @@
 [project]
 name = "python-doniclient"
-version = "1.0.4"
+dynamic = ["version"]
 description = "This is a plugin for the openstack commandline client, to enable support for the Doni hardware inventory project"
 authors = [{ name = "Chameleon Cloud", email = "contact@chameleoncloud.org" }]
 requires-python = ">=3.9"
@@ -14,6 +14,8 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 
 ]
 dependencies = [
@@ -45,16 +47,20 @@ hardware_availability_remove = "doniclient.osc.availability:RemoveHardwareAvaila
 
 
 [dependency-groups]
-dev = [
+test = [
     "oslotest",
     "python-openstackclient",
-    "ruff",
     "stestr",
 ]
 
 [build-system]
-requires = ["setuptools>=64"]
-build-backend = "setuptools.build_meta"
+requires = ["pbr>=7.1.0"]
+build-backend = "pbr.build"
+
+[tool.setuptools]
+# pbr lists every git-tracked file as package data; without this,
+# doniclient/tests ships in the wheel despite the exclude below
+include-package-data = false
 
 [tool.setuptools.packages.find]
 include = ["doniclient*"]
